@@ -6,23 +6,23 @@ def executar_matching(df_planilha, df_sql):
     # IDENTIFICAR DUPLICADOS
     # =========================
 
-    dup_sql_k1 = df_sql[df_sql['Chave Cartão'].duplicated(keep=False)]
-    dup_plan_k1 = df_planilha[df_planilha['Chave Cartão'].duplicated(keep=False)]
+    #dup_sql_k1 = df_sql[df_sql['Chave Cartão'].duplicated(keep=False)]
+    #dup_plan_k1 = df_planilha[df_planilha['Chave Cartão'].duplicated(keep=False)]
 
-    dup_sql_k2 = df_sql[df_sql['Chave Cartão + LOC CIA'].duplicated(keep=False)]
-    dup_plan_k2 = df_planilha[df_planilha['Chave Cartão + LOC CIA'].duplicated(keep=False)]
+    #dup_sql_k2 = df_sql[df_sql['Chave Cartão + LOC CIA'].duplicated(keep=False)]
+    #dup_plan_k2 = df_planilha[df_planilha['Chave Cartão + LOC CIA'].duplicated(keep=False)]
 
-    dup_sql_k3 = df_sql[df_sql['Chave Cartão Sem data'].duplicated(keep=False)]
-    dup_plan_k3 = df_planilha[df_planilha['Chave Cartão Sem data'].duplicated(keep=False)]
+    #dup_sql_k3 = df_sql[df_sql['Chave Cartão Sem data'].duplicated(keep=False)]
+    #dup_plan_k3 = df_planilha[df_planilha['Chave Cartão Sem data'].duplicated(keep=False)]
 
-    df_duplicados = pd.concat([
-        dup_sql_k1.assign(origem='sql_k1'),
-        dup_plan_k1.assign(origem='plan_k1'),
-        dup_sql_k2.assign(origem='sql_k2'),
-        dup_plan_k2.assign(origem='plan_k2'),
-        dup_sql_k3.assign(origem='sql_k3'),
-        dup_plan_k3.assign(origem='plan_k3'),
-    ], ignore_index=True)
+    #df_duplicados = pd.concat([
+        #dup_sql_k1.assign(origem='sql_k1'),
+        #dup_plan_k1.assign(origem='plan_k1'),
+        #dup_sql_k2.assign(origem='sql_k2'),
+        #dup_plan_k2.assign(origem='plan_k2'),
+        ##dup_sql_k3.assign(origem='sql_k3'),
+        #dup_plan_k3.assign(origem='plan_k3'),
+    #], ignore_index=True)
 
     # =========================
     # CHAVES VÁLIDAS
@@ -113,12 +113,6 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
 
     # =========================
-    # NÃO LOCALIZADOS
-    # =========================
-
-    df_nao_localizados = df_planilha[df_planilha['match_encontrado'] == False].copy()
-
-    # =========================
     # STATUS
     # =========================
 
@@ -133,6 +127,13 @@ def executar_matching(df_planilha, df_sql):
     ] = 'NT'
 
     # =========================
+    # NÃO LOCALIZADOS
+    # =========================
+
+    df_nao_localizados = df_planilha[df_planilha['match_encontrado'] == False].copy()
+
+
+    # =========================
     # LIMPEZA
     # =========================
 
@@ -143,3 +144,5 @@ def executar_matching(df_planilha, df_sql):
     # =========================
 
     df_preenchido = df_planilha.copy()
+
+    return df_preenchido, df_nao_localizados
