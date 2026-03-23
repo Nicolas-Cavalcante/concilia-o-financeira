@@ -2,13 +2,15 @@ import pyodbc
 import pandas as pd
 from datetime import datetime, timedelta
 import calendar
+import os
 
 def carregar_sql():
 
-    server = 'msdwbi01.befly.com.br'
-    database = 'DW_FLYTOUR'
-    username = 'bi.dataquality_fbt'
-    password = 'G7@kP2#q'
+    # Usa Load_dotenv para ler o arquivo .env
+    server = os.getenv('DB_Server')
+    database = os.getenv('DB_Database')
+    username = os.getenv('DB_User')
+    password = os.getenv('DB_Password')
 
     conn = pyodbc.connect(
         f'DRIVER={{SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};'

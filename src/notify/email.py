@@ -1,26 +1,24 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
+import win32com.client as win32
 
-def enviar_email(destinatarios, assunto, corpo, anexos=None):
 
-    msg = MIMEText(corpo)
-    msg['Subject'] = assunto
-    msg['From'] = "nicolas.cavalcante@flytour.com.br"
-    msg['To'] = ", ".join(destinatarios)
+def enviar_email(email_origem,destinatarios, assunto, corpo, anexos=None):
+    outlook = win32.Dispatch("Outlook.Application")
+    mail = outlook.CreateItem(0)
+    conta_encontrada = False
+        # Seleciona a conta correta
+    for conta in outlook.Session.Accounts:
+        if conta.SmtpAddress.lower() == email_origem.lower():
+            mail._oleobj_.Invoke(*(64209, 0, 8, 0, conta))
+            break
+    if not conta_encontrada:
+        raise ValueError(f"Conta {email_origem} não encontrada no Outlook")
+    
+    mail.To = ";".join(destinatarios)
+    mail.Subject = assunto
+    mail.HTMLBody = corpo
 
-    msg.attach(MIMEText(corpo, 'plain'))
-
-        # anexos
     if anexos:
         for caminho in anexos:
-            with open(caminho, 'rb') as f:
-                parte = MIMEApplication(f.read(), Name=caminho)
-                parte['Content-Disposition'] = f'attachment; filename="{caminho}"'
-                msg.attach(parte)
+            mail.Attachments.Add(caminho)
 
-    with smtplib.SMTP('smtp.office365.com', 587) as server:
-        server.starttls()
-        server.login("seu_email@empresa.com", "sua_senha")
-        server.send_message(msg)
+            mail.Send()
