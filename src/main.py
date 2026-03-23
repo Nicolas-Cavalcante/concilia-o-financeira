@@ -1,6 +1,5 @@
 from src.extract.database import carregar_sql
 from src.extract.pendencias import carregar_planilha
-from src.extract.base_email import carregar_base_email
 from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
 from src.export.salvar import salvar
@@ -11,21 +10,15 @@ from src.log.logger import registrar_execucao
 from src import config
 from src.notify.regra_envio import definir_destinatarios
 from src.notify.email import enviar_email
-from dotenv import load_dotenv
-
 
 def main():
 
-
-    load_dotenv()
     id_execucao = str(uuid4())
     data_execucao = datetime.now()
-    status_execucao = "Sucesso"
 
     try:
         # Extração
         df_planilha = carregar_planilha(config.INPUT_PATH)
-        df_base_email = carregar_base_email(config.INPUT_PATH2)
         df_sql = carregar_sql()
 
         if df_planilha.empty:
@@ -37,7 +30,7 @@ def main():
         # Transformação
         df_planilha = tratar_dados(df_planilha)
 
-        dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
+        dias_para_corte = df_planilha['Aging Corte'].min()
 
         # Matching
         df_final, df_nao_localizados = executar_matching(df_planilha, df_sql)
@@ -51,30 +44,27 @@ def main():
 
         # 👉 AQUI começa email
 
-        destinatarios = definir_destinatarios(dias_para_corte, df_base_email)
+        dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
+
+        destinatarios = definir_destinatarios(dias_para_corte, config)
 
         if destinatarios:
             enviar_email(
-                email_origem="nicolas.cavalcante@flytour.com.br",
                 destinatarios=destinatarios,
-                assunto="Casos incorretos Conciliação",
-                corpo="""Bom dia, 
-                
-                Seguem casos incorretos
-
-                Atenciosamente,
-                """,
+                assunto="Resultado da conciliação",
+                corpo="Processamento concluído",
                 anexos=[
-                    f"{config.OUTPUT_PATH}/Incorretos/nao_localizados.xlsx"
+                    f"{config.OUTPUT_PATH}/corretos/preenchidos.xlsx",
+                    f"{config.OUTPUT_PATH}/incorretos/nao_localizados.xlsx"
                 ]
     )
 
     except Exception as e:
         print(f"Erro na execução: {e}")
-        status_execucao = "Erro"
 
-        df_final = None
-        df_nao_localizados = None
+        df_final = []
+        df_nao_localizados = []
+        status_execucao = "ERRO"
 
     # LOG (executa sempre)
     dados_log = {
@@ -87,9 +77,9 @@ def main():
         "qtd_nao_localizados": len(df_nao_localizados[df_nao_localizados['status'] == 'NAO_LOCALIZADO']),
 
         "status_execucao": status_execucao,
-        "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
+        "email_enviado": "Não",
         "tipo_envio": "",
-        "dias_para_corte": dias_para_corte if 'Dias para corte' in locals() else 0
+        "dias_para_corte": ""
     }
 
     registrar_execucao(config.LOG_PATH, dados_log)
