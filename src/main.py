@@ -58,15 +58,23 @@ def main():
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios,
-                assunto="Casos incorretos Conciliação",
-                corpo="""Bom dia, 
-                
-                Seguem casos incorretos
+                assunto="Casos não identificados - EBTA",
+                corpo="""<p>Olá,
 
-                Atenciosamente,
+                    <p>Identificamos pendências em registros do seu atendimento.<p>
+
+                    <p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner, pois essas informações não foram localizadas no sistema.<p>
+
+                    <p>Caso os dados não sejam ajustados, os campos permanecerão sem informação na fatura do cliente.<p>
+
+                    <p>Após a correção, as transações serão atualizadas em até 24 horas.<p>
+
+                    <p>Solicitamos a regularização o quanto antes para evitar impactos para o cliente.<p>
+
+                    <p>Atenciosamente,
                 """,
                 anexos=[
-                    os.path.join(config.OUTPUT_PATH, "Incorretos", "nao_localizados.xlsx")
+                    os.path.join(config.OUTPUT_PATH, "Incorretos", "Pendências_EBTA.xlsx")
                 ]
     )
 
