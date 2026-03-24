@@ -12,6 +12,8 @@ from src import config
 from src.notify.regra_envio import definir_destinatarios
 from src.notify.email import enviar_email
 from dotenv import load_dotenv
+import pandas as pd
+import os
 
 def main():
 
@@ -54,7 +56,7 @@ def main():
 
         if destinatarios:
             enviar_email(
-                email_origem="nicolas.cavalcante@flytour.com.br",
+                email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios,
                 assunto="Casos incorretos Conciliação",
                 corpo="""Bom dia, 
@@ -63,8 +65,8 @@ def main():
 
                 Atenciosamente,
                 """,
-                                anexos=[
-                    f"{config.OUTPUT_PATH}/Incorretos/nao_localizados.xlsx"
+                anexos=[
+                    os.path.join(config.OUTPUT_PATH, "Incorretos", "nao_localizados.xlsx")
                 ]
     )
 
@@ -82,7 +84,7 @@ def main():
         #"arquivo": str(config.INPUT_PATH),
 
         "qtd_total": len(df_planilha) if 'df_planilha' in locals() else 0,
-        "qtd_corretos": len(df_final[df_final['status'] == 'OK']),
+        "qtd_corretos": len(df_final[df_final['status'] == 'OK']) if isinstance(df_final, pd.DataFrame) else 0,
         "qtd_nao_localizados": len(df_nao_localizados[df_nao_localizados['status'] == 'NAO_LOCALIZADO']),
 
         "status_execucao": status_execucao,

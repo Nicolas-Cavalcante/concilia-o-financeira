@@ -33,7 +33,7 @@ def definir_destinatarios(dias_para_corte, df_base_email):
         # return list(set(operacao + gestao + diretoria))
 
             # regras normais
-    if dias_para_corte <= 5:
+    if dias_para_corte <= 28 and dias_para_corte >= 10:
         return list(set(operacao))
     else:
         return operacao
