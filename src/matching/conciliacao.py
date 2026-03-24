@@ -130,7 +130,7 @@ def executar_matching(df_planilha, df_sql):
     # NÃO LOCALIZADOS
     # =========================
 
-    df_nao_localizados = df_planilha[df_planilha['match_encontrado'] == False].copy()
+    df_nao_localizados = df_planilha[df_planilha['status'] == 'NAO_LOCALIZADO'].copy()
 
 
     # =========================
