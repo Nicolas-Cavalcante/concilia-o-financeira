@@ -14,8 +14,10 @@ from src.notify.email import enviar_email
 from dotenv import load_dotenv
 import pandas as pd
 import os
+import argparse
+from pathlib import Path
 
-def main():
+def main(input_path, input_path2, enviar_email_flag):
 
     load_dotenv()
     id_execucao = str(uuid4())
@@ -23,8 +25,8 @@ def main():
     status_execucao = "Sucesso"
     try:
         # Extração
-        df_planilha = carregar_planilha(config.INPUT_PATH)
-        df_base_email = carregar_base_email(config.INPUT_PATH2)
+        df_planilha = carregar_planilha(input_path)
+        df_base_email = carregar_base_email(input_path2)
         df_sql = carregar_sql()
 
         if df_planilha.empty:
@@ -45,7 +47,8 @@ def main():
         salvar(
             df_final=df_final,
             df_nao_localizados=df_nao_localizados,
-            base_path=config.OUTPUT_PATH
+            path_corretos=config.OUTPUT_CORRETOS,
+            path_incorretos=config.OUTPUT_INCORRETOS
         )
 
         # 👉 AQUI começa email
@@ -54,7 +57,7 @@ def main():
 
         destinatarios = definir_destinatarios(dias_para_corte, df_base_email)
 
-        if destinatarios:
+        if destinatarios and enviar_email_flag:
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios,
@@ -104,4 +107,13 @@ def main():
     registrar_execucao(config.LOG_PATH, dados_log)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input1", required=True)
+    parser.add_argument("--input2", required=True)
+
+    args = parser.parse_args()
+
+    INPUT_PATH = Path(args.input1)
+    INPUT_PATH2 = Path(args.input2)
+
+    main(INPUT_PATH, INPUT_PATH2, True)  # ou False padrão
