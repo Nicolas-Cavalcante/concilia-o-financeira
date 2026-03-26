@@ -77,7 +77,7 @@ def main(input_path, input_path2, enviar_email_flag):
                     <p>Atenciosamente,
                 """,
                 anexos=[
-                    os.path.join(config.OUTPUT_PATH, "Incorretos", "Pendências_EBTA.xlsx")
+                    os.path.join(config.OUTPUT_INCORRETOS, "Pendências_EBTA.xlsx")
                 ]
     )
 
