@@ -52,7 +52,7 @@ def perguntar_envio_email():
 def tela_processamento(funcao_processamento):
     root.deiconify()
     root.title("Processamento Pendências EBTA")
-    root.geometry("280x200")
+    root.geometry("380x200")
 
     label = tk.Label(root, text="Iniciando...", font=("Arial", 12))
     label.pack(padx=50, pady=30)
@@ -68,6 +68,13 @@ def tela_processamento(funcao_processamento):
 
             root.after(0, lambda: label.config(text="Concluído com sucesso!"))
             root.after(2000, root.destroy)
+
+        except PermissionError:
+            root.after(0, lambda: messagebox.showerror(
+                "⚠️ Arquivo em uso",
+                "O arquivo está aberto. Feche o excel e rode novamente."
+            ))
+            root.after(3000, root.destroy)
 
         except Exception as e:
             erro = str(e)

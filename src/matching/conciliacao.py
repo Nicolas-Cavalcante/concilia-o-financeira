@@ -132,7 +132,23 @@ def executar_matching(df_planilha, df_sql):
 
     df_nao_localizados = df_planilha[df_planilha['status'] == 'NAO_LOCALIZADO'].copy()
 
+    # ==============================================
+    # 📊 REGRAS DE CLASSIFICAÇÃO (FONTE ÚNICA)
+    # ==============================================
 
+    def regras_status(aging):
+        if aging < 0:
+            return "⚠️ Critico"
+        elif aging == 0:
+            return "🔴 Urgente"
+        elif aging <= 5:
+            return "🟠 Alta"
+        elif aging <= 10:
+            return "🟡 Média"
+        else:
+            return "🟢 Baixa"
+
+    df_nao_localizados['Status do Processo'] = df_nao_localizados['Aging Corte'].apply(regras_status)
     # =========================
     # LIMPEZA
     # =========================
