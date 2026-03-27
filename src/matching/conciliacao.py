@@ -1,28 +1,9 @@
 import pandas as pd
+import openpyxl
+from openpyxl.styles import Font, Alignment, Color
+from openpyxl.utils import get_column_letter
 
 def executar_matching(df_planilha, df_sql):
-
-    # =========================
-    # IDENTIFICAR DUPLICADOS
-    # =========================
-
-    #dup_sql_k1 = df_sql[df_sql['Chave Cartão'].duplicated(keep=False)]
-    #dup_plan_k1 = df_planilha[df_planilha['Chave Cartão'].duplicated(keep=False)]
-
-    #dup_sql_k2 = df_sql[df_sql['Chave Cartão + LOC CIA'].duplicated(keep=False)]
-    #dup_plan_k2 = df_planilha[df_planilha['Chave Cartão + LOC CIA'].duplicated(keep=False)]
-
-    #dup_sql_k3 = df_sql[df_sql['Chave Cartão Sem data'].duplicated(keep=False)]
-    #dup_plan_k3 = df_planilha[df_planilha['Chave Cartão Sem data'].duplicated(keep=False)]
-
-    #df_duplicados = pd.concat([
-        #dup_sql_k1.assign(origem='sql_k1'),
-        #dup_plan_k1.assign(origem='plan_k1'),
-        #dup_sql_k2.assign(origem='sql_k2'),
-        #dup_plan_k2.assign(origem='plan_k2'),
-        ##dup_sql_k3.assign(origem='sql_k3'),
-        #dup_plan_k3.assign(origem='plan_k3'),
-    #], ignore_index=True)
 
     # =========================
     # CHAVES VÁLIDAS
@@ -138,22 +119,31 @@ def executar_matching(df_planilha, df_sql):
 
     def regras_status(aging):
         if aging < 0:
-            return "⚠️ Critico"
+            return "Crítico"
         elif aging == 0:
-            return "🔴 Urgente"
+            return "Urgente"
         elif aging <= 5:
-            return "🟠 Alta"
+            return "Alta"
         elif aging <= 10:
-            return "🟡 Média"
+            return "Média"
         else:
-            return "🟢 Baixa"
+            return "Baixa"
 
     df_nao_localizados['Status do Processo'] = df_nao_localizados['Aging Corte'].apply(regras_status)
+    
     # =========================
     # LIMPEZA
     # =========================
 
     df_planilha.drop(columns=['match_encontrado'], inplace=True)
+    df_nao_localizados.drop(columns=[
+        'Chave Cartão', 
+        'Chave Cartão + '
+        'LOC CIA', 
+        'Chave Cartão Sem data',
+        'match_encontrado',
+        'status'
+        ])
 
     # =========================
     # DATAFRAME FINAL
