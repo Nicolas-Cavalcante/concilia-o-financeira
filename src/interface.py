@@ -4,6 +4,7 @@ import threading
 from tkinter import messagebox
 from tkinter import filedialog
 from src.main import main
+import traceback
 
 
 # ==============================
@@ -69,9 +70,14 @@ def tela_processamento(funcao_processamento):
             root.after(2000, root.destroy)
 
         except Exception as e:
-            root.after(0, lambda: label.config(text=f"Erro: {e}"))
+            erro = str(e)
 
-        root.after(0, progress.stop)
+            print(traceback.format_exc())
+            root.after(0, lambda: messagebox.showerror("Erro", erro))
+            root.after(10000, root.destroy)
+
+        finally:
+            root.after(0, progress.stop)
 
     threading.Thread(target=rodar, daemon=True).start()
     root.mainloop()

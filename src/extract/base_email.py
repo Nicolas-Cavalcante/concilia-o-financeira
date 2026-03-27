@@ -4,11 +4,21 @@ import pandas as pd
 #import sys
 #import os
 #sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-#from src import config
 
 
 def carregar_base_email(path):
-    return pd.read_excel(path, sheet_name='Clientes_SAO CPQ',header=0)
+    abas = pd.read_excel(path, sheet_name=None)
 
-#df = carregar_base_email(config.INPUT_PATH2)
-#print(df['COLABORADOR'])
+    colunas_esperadas = {"Cliente", "Unidade"}
+    abas_analisadas = []
+
+    for nome_aba, df in abas.items():
+        abas_analisadas.append(nome_aba)
+        
+        if colunas_esperadas.issubset(df.columns):
+            return df
+        
+    raise ValueError(
+        "Arquivo fora do padrão esperado: nenhuma aba contém as colunas obrigatórias "
+        f"{colunas_esperadas}. Abas encontradas: {abas_analisadas}"
+    )

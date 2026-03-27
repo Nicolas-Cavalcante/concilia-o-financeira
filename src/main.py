@@ -88,6 +88,7 @@ def main(input_path, input_path2, enviar_email_flag):
         df_final = None
         df_nao_localizados = None
 
+        raise e #Não permite que a informação apresentada no erro quebre
     # LOG (executa sempre)
     dados_log = {
         "id_execucao": id_execucao,
@@ -96,7 +97,11 @@ def main(input_path, input_path2, enviar_email_flag):
 
         "qtd_total": len(df_planilha) if 'df_planilha' in locals() else 0,
         "qtd_corretos": len(df_final[df_final['status'] == 'OK']) if isinstance(df_final, pd.DataFrame) else 0,
-        "qtd_nao_localizados": len(df_nao_localizados[df_nao_localizados['status'] == 'NAO_LOCALIZADO']),
+        "qtd_nao_localizados": ( 
+            len(df_nao_localizados[df_nao_localizados['status'] == 'NAO_LOCALIZADO'])
+            if isinstance(df_nao_localizados, pd.DataFrame)
+            else 0
+        ),
 
         "status_execucao": status_execucao,
         "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
