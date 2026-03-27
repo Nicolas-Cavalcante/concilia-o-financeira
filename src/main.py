@@ -1,26 +1,45 @@
+
+#==============================================
+# ⚙️ IMPORTAÇÃO DAS BASES
+#==============================================
+
 from src.extract.database import carregar_sql
 from src.extract.pendencias import carregar_planilha
 from src.extract.base_email import carregar_base_email
 from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
 from src.export.salvar import salvar
+from src.notify.analises_email import (
+    classifica_agin,
+    compara_movimento,
+    montar_corpo_email
+)
+from src.log.logger import registrar_execucao
+from src.notify.regra_envio import definir_destinatarios
+from src.notify.email import enviar_email
+
+#==============================================
+# ⚙️ IMPORTAÇÃO DAS BIBLIOTECAS
+#==============================================
+
 from src import config
 from datetime import datetime
 from uuid import uuid4
-from src.log.logger import registrar_execucao
 from src import config
-from src.notify.regra_envio import definir_destinatarios
-from src.notify.email import enviar_email
 from dotenv import load_dotenv
 import pandas as pd
 import os
 import argparse
 from pathlib import Path
 
+
+
+
 def main(input_path, input_path2, enviar_email_flag):
 
     load_dotenv()
-    id_execucao = str(uuid4())
+    nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
+    id_execucao = nome_arquivo[-6:]
     data_execucao = datetime.now()
     status_execucao = "Sucesso"
     try:
@@ -51,7 +70,31 @@ def main(input_path, input_path2, enviar_email_flag):
             path_incorretos=config.OUTPUT_INCORRETOS
         )
 
-        # 👉 AQUI começa email
+        #==============================================
+        # 📊 analytics
+        #==============================================
+        status_atual = classifica_agin(df_nao_localizados)
+
+        # 🔴 provisório (até você ter df_ontem)
+        status_movimento = {
+            "Novos": 0,
+            "Resolvidos": 0,
+            "Pioraram": 0,
+            "Melhoraram": 0
+        }
+
+        corpo_email = montar_corpo_email(status_atual, status_movimento)
+
+        #==============================================
+        # 📩 Chamada para E-mail
+        #==============================================
+
+        existem_urgentes = (df_nao_localizados['Aging Corte'] < 0).any() # Verifica casos urgentes
+
+        cc = [] # Cria cópia no email vazia
+
+        if existem_urgentes:
+            cc = os.getenv("Email_Diretoria").split(";")
 
         dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
 
@@ -61,26 +104,17 @@ def main(input_path, input_path2, enviar_email_flag):
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios,
+                cc=cc,
                 assunto="Casos não identificados - EBTA",
-                corpo="""<p>Olá,
-
-                    <p>Identificamos pendências em registros do seu atendimento.<p>
-
-                    <p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner, pois essas informações não foram localizadas no sistema.<p>
-
-                    <p>Caso os dados não sejam ajustados, os campos permanecerão sem informação na fatura do cliente.<p>
-
-                    <p>Após a correção, as transações serão atualizadas em até 24 horas.<p>
-
-                    <p>Solicitamos a regularização o quanto antes para evitar impactos para o cliente.<p>
-
-                    <p>Atenciosamente,
-                """,
+                corpo=corpo_email,
                 anexos=[
                     os.path.join(config.OUTPUT_INCORRETOS, "Pendências_EBTA.xlsx")
                 ]
     )
-
+    
+    #==============================================
+    # 🛠️ Exceção de erros
+    #==============================================
     except Exception as e:
         print(f"Erro na execução: {e}")
         status_execucao = "Erro"
@@ -89,11 +123,13 @@ def main(input_path, input_path2, enviar_email_flag):
         df_nao_localizados = None
 
         raise e #Não permite que a informação apresentada no erro quebre
-    # LOG (executa sempre)
+    
+    #==============================================
+    # 📌 Carrega LOG de Excução (executa sempre)
+    #==============================================
     dados_log = {
         "id_execucao": id_execucao,
         "data_execucao": data_execucao,
-        #"arquivo": str(config.INPUT_PATH),
 
         "qtd_total": len(df_planilha) if 'df_planilha' in locals() else 0,
         "qtd_corretos": len(df_final[df_final['status'] == 'OK']) if isinstance(df_final, pd.DataFrame) else 0,
@@ -105,8 +141,8 @@ def main(input_path, input_path2, enviar_email_flag):
 
         "status_execucao": status_execucao,
         "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
-        "tipo_envio": "",
-        "dias_para_corte": dias_para_corte if 'Dias para corte' in locals() else 0
+        #"tipo_envio": "",
+        #"dias_para_corte": dias_para_corte if 'Dias para corte' in locals() else 0
     }
 
     registrar_execucao(config.LOG_PATH, dados_log)
@@ -121,4 +157,4 @@ if __name__ == "__main__":
     INPUT_PATH = Path(args.input1)
     INPUT_PATH2 = Path(args.input2)
 
-    main(INPUT_PATH, INPUT_PATH2, True)  # ou False padrão
+    main(INPUT_PATH, INPUT_PATH2, True)

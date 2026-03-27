@@ -7,14 +7,13 @@ from datetime import datetime
 COLUNAS_LOG = [
     "id_execucao",
     "data_execucao",
-    #"arquivo",
     "qtd_total",
     "qtd_corretos",
     "qtd_nao_localizados",
     "status_execucao",
-    "email_enviado",
-    "tipo_envio",
-    "dias_para_corte"
+    "email_enviado"
+    #"tipo_envio",
+    #"dias_para_corte"
 ]
 
 
