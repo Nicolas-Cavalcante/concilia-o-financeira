@@ -81,7 +81,7 @@ Aging (Dias)	Status	Prioridade	Ação
 
 6 a 10	Média	Baixa	Acompanhamento
 
-> 10	Baixa	Baixa	Rotina normal
+> 10	Baixa	Rotina normal
 
 # 5. Dependências Principais
 
