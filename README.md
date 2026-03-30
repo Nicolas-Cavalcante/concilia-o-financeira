@@ -1,6 +1,3 @@
-# projeto-conciliacao_ebta
-Melhorias no processo de conciliacao.
-
 # SmartCheck - Documentação do Projeto
 
 # 1. Visão Geral
