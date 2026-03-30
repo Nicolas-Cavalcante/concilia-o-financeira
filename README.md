@@ -10,15 +10,25 @@ O SmartCheck é uma solução de automação desenvolvida em Python para otimiza
 # 2. Arquitetura do Sistema
 
 O projeto segue uma arquitetura modular para facilitar manutenção, escalabilidade e organização:
+
 •	inputs/base_clientes: Base de clientes utilizada no processamento.
+
 •	inputs/casos_pendencias: Arquivo de pendências do Bradesco.
+
 •	inputs/de_para: Mapeamento de campos por cliente.
+
 •	outputs/arquivos de saída.
+
 •	src/extract: Ingestão de dados (SQL, Excel, bases auxiliares).
+
 •	src/transform: Tratamento e criação de chaves de matching.
+
 •	src/matching: Motor de regras para cruzamento de dados.
+
 •	src/notify: Lógica de criticidade e envio de e-mails.
+
 •	src/interface: Interface gráfica em Tkinter.
+
 Em mapeamento de campos por cliente temos um cuidado maior de verificação, a mascara de colunas criada no arquivo vai corresponder onde cada informação está no banco. Temos clientes por exemplo que a informação do “centro de custo” fica na coluna de “infpolitica” no banco, para esses casos precisamos identificar qual a coluna correspondente para cada cliente.
 
 # 3. Fluxo de Dados
