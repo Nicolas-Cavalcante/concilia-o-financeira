@@ -27,7 +27,6 @@ Em mapeamento de campos por cliente temos um cuidado maior de verificação, a m
 
 ==========================
 # 3. Fluxo de Dados
-==========================
 
 # O processamento segue as seguintes etapas:
 •	Entrada de arquivos via interface (pendências e base de clientes).
