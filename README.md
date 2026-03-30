@@ -27,15 +27,17 @@ Em mapeamento de campos por cliente temos um cuidado maior de verificação, a m
 
 ==========================
 # 3. Fluxo de Dados
+==========================
 
-# O processamento segue as seguintes etapas:
+O processamento segue as seguintes etapas:
 •	Entrada de arquivos via interface (pendências e base de clientes).
 •	Consulta SQL com dados dos últimos 2 meses.
 •	Geração de múltiplas chaves de matching.
 •	Execução do motor de conciliação.
 •	Geração de outputs (conciliados e pendentes).
 •	Envio automático de notificações por e-mail.
-# Chaves de Matching:
+
+Chaves de Matching:
 •	K1: Autorização
 •	K2: Autorização + Data + Valor
 •	K3: Autorização + Cartão + Data + Valor
