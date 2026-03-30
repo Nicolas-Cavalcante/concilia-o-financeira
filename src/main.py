@@ -31,11 +31,11 @@ import pandas as pd
 import os
 import argparse
 from pathlib import Path
+import time
 
 
 
-
-def main(input_path, input_path2, enviar_email_flag):
+def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
 
     load_dotenv()
     nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
@@ -44,9 +44,20 @@ def main(input_path, input_path2, enviar_email_flag):
     status_execucao = "Sucesso"
     try:
         # Extração
+        if atualizar_status:
+            atualizar_status("Carregando base de pendências...", 10)
+            time.sleep(1.7)
         df_planilha = carregar_planilha(input_path)
+
+        if atualizar_status:
+            atualizar_status("Carregando base de clientes...", 20)
         df_base_email = carregar_base_email(input_path2)
+
+        if atualizar_status:
+            atualizar_status("Conectando ao banco...", 35)
         df_sql = carregar_sql()
+
+        atualizar_status("Base carregada. Iniciando processamento...", 55)
 
         if df_planilha.empty:
             raise ValueError("Planilha vazia")
@@ -54,13 +65,23 @@ def main(input_path, input_path2, enviar_email_flag):
         if df_sql.empty:
             raise ValueError("Base SQL vazia")
 
-        # Transformação
+        if atualizar_status:
+            atualizar_status("Validando casos não conciliados e preparando e-mail...", 65)
+            time.sleep(2.5)
         df_planilha = tratar_dados(df_planilha)
-
         dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
 
-        # Matching
+        atualizar_status("Executando conciliação...", 75)
+        time.sleep(1.5)
         df_final, df_nao_localizados = executar_matching(df_planilha, df_sql)
+
+        qtde_ok = (df_planilha['status'] == 'OK').sum()
+        qtde_erro = (df_planilha['status'] == 'NAO_LOCALIZADO').sum()
+
+        if atualizar_status:
+            atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} não localizados", 85)
+            time.sleep(1.0)
+
 
         # Saída
         salvar(
@@ -101,6 +122,9 @@ def main(input_path, input_path2, enviar_email_flag):
         destinatarios = definir_destinatarios(dias_para_corte, df_base_email)
 
         if destinatarios and enviar_email_flag:
+            if atualizar_status:
+                atualizar_status("Encaminhando e-mail para operação 📩", 90)
+
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios,
@@ -110,7 +134,10 @@ def main(input_path, input_path2, enviar_email_flag):
                 anexos=[
                     os.path.join(config.OUTPUT_INCORRETOS, "Pendências_EBTA.xlsx")
                 ]
-    )
+            )
+            
+        atualizar_status("Finalizando...", 95)
+        time.sleep(1.5)
     
     #==============================================
     # 🛠️ Exceção de erros
@@ -141,8 +168,6 @@ def main(input_path, input_path2, enviar_email_flag):
 
         "status_execucao": status_execucao,
         "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
-        #"tipo_envio": "",
-        #"dias_para_corte": dias_para_corte if 'Dias para corte' in locals() else 0
     }
 
     registrar_execucao(config.LOG_PATH, dados_log)
