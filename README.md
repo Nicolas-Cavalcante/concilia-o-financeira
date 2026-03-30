@@ -3,15 +3,11 @@ Melhorias no processo de conciliacao.
 
 # SmartCheck - Documentação do Projeto
 
-==========================
 # 1. Visão Geral
-==========================
 
 O SmartCheck é uma solução de automação desenvolvida em Python para otimizar o processo de conciliação EBTA. O sistema cruza dados de planilhas de pendências com uma base SQL, realiza o matching das informações e automatiza o envio de notificações via Outlook.
 
-==========================
 # 2. Arquitetura do Sistema
-==========================
 
 O projeto segue uma arquitetura modular para facilitar manutenção, escalabilidade e organização:
 •	inputs/base_clientes: Base de clientes utilizada no processamento.
@@ -25,9 +21,7 @@ O projeto segue uma arquitetura modular para facilitar manutenção, escalabilid
 •	src/interface: Interface gráfica em Tkinter.
 Em mapeamento de campos por cliente temos um cuidado maior de verificação, a mascara de colunas criada no arquivo vai corresponder onde cada informação está no banco. Temos clientes por exemplo que a informação do “centro de custo” fica na coluna de “infpolitica” no banco, para esses casos precisamos identificar qual a coluna correspondente para cada cliente.
 
-==========================
 # 3. Fluxo de Dados
-==========================
 
 O processamento segue as seguintes etapas:
 •	Entrada de arquivos via interface (pendências e base de clientes).
@@ -45,9 +39,7 @@ Chaves de Matching:
 •	K5: Cartão + Data + Valor + Localizador
 •	K6: Cartão + Valor + Localizador
 
-==========================
 # 4. Regras de Negócio
-==========================
 
 Casos não conciliados são enviados para ajuste operacional via e-mail. As correções devem ser realizadas no sistema de origem (benner), assim no próximo processamento este caso não subirá como pendência.
 
@@ -64,9 +56,7 @@ Aging (Dias)	Status	Prioridade	Ação
 6 a 10	Média	Baixa	Acompanhamento
 > 10	Baixa	Baixa	Rotina normal
 
-==========================
 # 5. Dependências Principais
-==========================
 
 •	Pandas & Openpyxl: Manipulação de dados.
 •	SQLAlchemy & pyodbc: Conexão com SQL Server.
@@ -80,9 +70,7 @@ Variáveis de Ambiente (.env)
 •	Email_User;
 •	Email_Diretoria.
 
-==========================
 # 6. Utilização
-==========================
 
 •	Executar interface;
 •	Selecionar planilha de pendências (extraída do site/Bradesco);
