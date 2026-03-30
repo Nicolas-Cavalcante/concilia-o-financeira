@@ -32,7 +32,7 @@ def iniciar_processo():
         return
 
     enviar_email = perguntar_envio_email()
-    tela_processamento(lambda: main(input1, input2, enviar_email))
+    tela_processamento(lambda atualiza_status: main(input1, input2, enviar_email, atualiza_status))
 
 #==============================================
 #🔧 2. CONFIRMAÇÃO DE ENVIO DO E-MAIL
@@ -52,22 +52,87 @@ def perguntar_envio_email():
 def tela_processamento(funcao_processamento):
     root.deiconify()
     root.title("Processamento Pendências EBTA")
-    root.geometry("380x200")
+    root.geometry("420x220")
+    root.configure(bg="#F5F6FA")
 
-    label = tk.Label(root, text="Iniciando...", font=("Arial", 12))
-    label.pack(padx=50, pady=30)
+    container = tk.Frame(root, bg="#F5F6FA")
+    container.pack(expand=True)
 
-    progress = ttk.Progressbar(root, mode="indeterminate")
-    progress.pack(padx=20, pady=10)
-    progress.start()
+    title = tk.Label(
+        container,
+        text="Processamento EBTA",
+        font=("Segoe UI", 14, "bold"),
+        bg="#F5F6FA"
+    )
+    title.pack(pady=(20,10))
+
+    label = tk.Label(
+        container,
+        text="Preparando...",
+        font=("Segoe UI", 11),
+        bg="#F5F6FA"
+    )
+    label.pack(pady=10)
+
+    style = ttk.Style()
+    style.theme_use('default')
+
+    style.configure(
+        "Custom.Horizontal.TProgressbar",
+        troughcolor="#E0E0E0",
+        background="#2ECC71",  # verde mais moderno
+        thickness=12
+    )
+
+    progress = ttk.Progressbar(
+        container,
+        style="Custom.Horizontal.TProgressbar",
+        mode="determinate",
+        length=300,
+        maximum=100
+    )
+    progress.pack(pady=10)
+
+    percent_label = tk.Label(
+        container,
+        text="0%",
+        font=("Segoe UI", 10, "bold"),
+        fg="#020704",
+        bg="#F5F6FA"
+    )
+
+    success_label = tk.Label(
+        container,
+        text="✔ Processamento concluído",
+        font=("Segoe UI", 11, "bold"),
+        fg="#0C6832",
+        bg="#F5F6FA"
+    )
+
+    percent_label.pack(pady=(0,10))
+    # ✅ função de atualização
+    def atualiza_status(texto, progresso=None):
+        def update():
+            label.config(text=texto)
+            if progresso is not None:
+                progress['value'] = progresso
+                percent_label.config(text=f"{progresso}%")
+            root.update_idletasks()
+        root.after(0,update)
 
     def rodar():
         try:
-            root.after(0, lambda: label.config(text="Processando dados..."))
-            funcao_processamento()
+            funcao_processamento(atualiza_status)
 
-            root.after(0, lambda: label.config(text="Concluído com sucesso!"))
-            root.after(2000, root.destroy)
+            def mostrar_sucesso():
+                progress['value'] = 100
+                percent_label.config(text="100%")
+                label.config(text="")
+
+                if not success_label.winfo_ismapped():
+                    success_label.pack(pady=(10,0))
+                root.after(2000, root.destroy)
+            root.after(0, mostrar_sucesso)
 
         except PermissionError:
             root.after(0, lambda: messagebox.showerror(
@@ -82,9 +147,6 @@ def tela_processamento(funcao_processamento):
             print(traceback.format_exc())
             root.after(0, lambda: messagebox.showerror("Erro", erro))
             root.after(10000, root.destroy)
-
-        finally:
-            root.after(0, progress.stop)
 
     threading.Thread(target=rodar, daemon=True).start()
     root.mainloop()
