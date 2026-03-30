@@ -3,9 +3,7 @@ Melhorias no processo de conciliacao.
 
 # SmartCheck - Documentação do Projeto
 
-==========================
 # 1. Visão Geral
-==========================
 
 O SmartCheck é uma solução de automação desenvolvida em Python para otimizar o processo de conciliação EBTA. O sistema cruza dados de planilhas de pendências com uma base SQL, realiza o matching das informações e automatiza o envio de notificações via Outlook.
 
