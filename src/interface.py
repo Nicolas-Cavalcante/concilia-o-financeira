@@ -5,7 +5,8 @@ from tkinter import messagebox
 from tkinter import filedialog
 from src.main import main
 import traceback
-
+import os
+import subprocess
 
 # ==============================
 # ROOT (uma única instância)
@@ -46,17 +47,57 @@ def perguntar_envio_email():
 
 
 #==============================================
+#🔧 3. FUNÇÃO PARA ABRIR ARQUIVO PELA INTERFACE
+#==============================================
+
+def abrir_arquivo():
+    caminho = os.path.join("outputs", "Incorretos", "Pendências_EBTA.xlsx")
+
+    try:
+        os.startfile(caminho)
+    except:
+        subprocess.call(["open", caminho])
+
+#==============================================
 #🔧 3. POPUP DE PROCESSAMENTO DO CÓDIGO
 #==============================================
 
+# Configurações da janela de processamento
 def tela_processamento(funcao_processamento):
     root.deiconify()
     root.title("Processamento Pendências EBTA")
-    root.geometry("420x220")
+
+    root.update_idletasks()  # garante medidas corretas
+    root.resizable(False, False)
+        # tamanho da janela
+    largura = 420
+    altura = 260
+
+    # tamanho da tela
+    largura_tela = root.winfo_screenwidth()
+    altura_tela = root.winfo_screenheight()
+
+    # posição central
+    x = (largura_tela // 2) - (largura // 2)
+    y = (altura_tela // 2) - (altura // 2)
+
+    # aplica na janela
+    root.geometry(f"{largura}x{altura}+{x}+{y}")
     root.configure(bg="#F5F6FA")
 
+    root.attributes("-alpha", 0.0)
+
+    def fade_in(opacity=0.0):
+        opacity += 0.05
+        if opacity <= 1:
+            root.attributes("-alpha", opacity)
+            root.after(20, fade_in, opacity)
+
+    fade_in()
+    
+    # Inicia ajustes no container
     container = tk.Frame(root, bg="#F5F6FA")
-    container.pack(expand=True)
+    container.pack(expand=True, fill="both")
 
     title = tk.Label(
         container,
@@ -101,16 +142,50 @@ def tela_processamento(funcao_processamento):
         bg="#F5F6FA"
     )
 
-    success_label = tk.Label(
-        container,
-        text="✔ Processamento concluído",
-        font=("Segoe UI", 11, "bold"),
-        fg="#0C6832",
-        bg="#F5F6FA"
+# CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
+    buttons_frame = tk.Frame(container, bg="#F5F6FA")
+
+    btn_abrir = tk.Button(
+        buttons_frame,
+        text="Abrir arquivo de pendências",
+        font=("Segoe UI", 10),
+        bg="#2ECC71",
+        fg="white",
+        relief="flat",
+        padx=15,
+        pady=10,
+        command=lambda: abrir_arquivo()
+    )
+# CRIA BOTÃO PARA FECHAR O ARQUIVO NO FINAL DO PROCESSAMENTO
+    btn_fechar = tk.Button(
+        buttons_frame,
+        text="Fechar",
+        font=("Segoe UI", 10),
+        bg="#BDC3C7",
+        relief="flat",
+        padx=15,
+        pady=10,
+        command=root.destroy
     )
 
+    btn_abrir.pack(side="left", padx=5)
+    btn_fechar.pack(side="left", padx=5)
+
+# CONFIGURA LABEL DE SUCESSO AO CONCLUIR O PROCESSAMENTO
+    success_frame = tk.Frame(container, bg="#E8F8F0", bd=0)
+    success_label = tk.Label(
+        success_frame,
+        text="✔ Processamento concluído",
+        font=("Segoe UI", 12, "bold"),
+        fg="#0C6832",
+        bg="#F5F6FA",
+        padx=10,
+        pady=8
+    )
+    success_label.pack()
     percent_label.pack(pady=(0,10))
-    # ✅ função de atualização
+
+# ✅ FUNÇÃO DE ATUALIZAÇÃO
     def atualiza_status(texto, progresso=None):
         def update():
             label.config(text=texto)
@@ -120,18 +195,20 @@ def tela_processamento(funcao_processamento):
             root.update_idletasks()
         root.after(0,update)
 
+# ✅ FUNÇÃO PARA RODAR O PROCESSO
     def rodar():
         try:
             funcao_processamento(atualiza_status)
 
+            # MOSTRA SUCESSO 
             def mostrar_sucesso():
                 progress['value'] = 100
                 percent_label.config(text="100%")
-                label.config(text="")
+                label.config(text="Processamento finalizado")
 
-                if not success_label.winfo_ismapped():
-                    success_label.pack(pady=(10,0))
-                root.after(2000, root.destroy)
+                success_frame.pack(pady=(10,5))   # mostra o bloco verde
+                buttons_frame.pack(pady=(5,10))   # mostra os botões
+
             root.after(0, mostrar_sucesso)
 
         except PermissionError:

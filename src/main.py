@@ -66,7 +66,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             raise ValueError("Base SQL vazia")
 
         if atualizar_status:
-            atualizar_status("Validando casos não conciliados e preparando e-mail...", 65)
+            atualizar_status("Trabalhando nas bases...", 65)
             time.sleep(2.5)
         df_planilha = tratar_dados(df_planilha)
         dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
@@ -139,6 +139,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         atualizar_status("Finalizando...", 95)
         time.sleep(1.5)
     
+
+        atualizar_status("Finalizado", 100)
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================
