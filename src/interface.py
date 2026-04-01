@@ -91,7 +91,7 @@ def tela_processamento(funcao_processamento):
         opacity += 0.05
         if opacity <= 1:
             root.attributes("-alpha", opacity)
-            root.after(20, fade_in, opacity)
+            root.after(10, fade_in, opacity)
 
     fade_in()
     
