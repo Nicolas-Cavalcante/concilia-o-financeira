@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 
 def tratar_dados(df):
 
@@ -41,5 +42,10 @@ def tratar_dados(df):
         df['Valor Total'] +
         df['RLOC_CIA_CORRETO']
     )
+
+    #Cria coluna data de fechamento
+    data_execucao = pd.Timestamp.today().normalize()
+
+    df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
 
     return df
