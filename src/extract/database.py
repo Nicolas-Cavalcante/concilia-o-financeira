@@ -39,13 +39,16 @@ def carregar_sql():
 
    # ===== QUERY SQL =====
     query = f"""
-        select 
+        SELECT 
             SO.nr_cartao_mascarado,
             SO.dt_movimento,
             SO.vl_online_cliente,
-            concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão],
-            concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + LOC CIA],
-            concat(SO.nr_cartao_mascarado, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão Sem data],
+            concat(SO.nr_autorizacao_cartao, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
+            concat(SO.nr_autorizacao_cartao, SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Cartão + Data + Valor],
+            concat(SO.loc_reserva, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Loc Cia + Data + Valor],
+            concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão + Data + Valor],
+            concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Data + LOC CIA],
+            concat(SO.nr_cartao_mascarado, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Valor + LOC CIA],
             SO.loc_reserva AS Localizador,
             SO.INFOS AS OS,
             SO.id_nro_bilhete AS Bilhete,
@@ -55,9 +58,10 @@ def carregar_sql():
             SO.ds_solicitante AS [Nome do Solicitante],
             SO.INFAPROVADOR AS Aprovador,
             SO.dsc_rota AS Trecho,
-            SO.INFDIVISAO AS Departamento
-        from
-        (select 
+            SO.INFDIVISAO AS Departamento,
+            SO.nr_autorizacao_cartao
+        FROM
+        (SELECT 
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
             FORMAT(dt_movimento, 'yyyy-MM-dd') AS dt_movimento, 
             CAST(vl_online_cliente + ISNULL(vl_taxa_embarque,0) AS DECIMAL(18,2)) AS vl_online_cliente,
@@ -70,14 +74,15 @@ def carregar_sql():
             DS.ds_solicitante,
             INFAPROVADOR,
             DR.dsc_rota,
-            INFDIVISAO
-        from fato_aereo FT
-            left join dim_passageiro DP ON FT.id_passageiro = DP.id_passageiro 
-            left join dim_contato_solicitante DS ON FT.id_solicitante = DS.id_solicitante
-            left join dim_rota DR ON FT.id_rota = DR.id_rota  
-            where id_divisao = 2000 
-            and nr_cartao_mascarado is not null
-            and dt_movimento between '{data_inicial}' AND '{data_final}'
+            INFDIVISAO,
+            nr_autorizacao_cartao
+        FROM fato_aereo FT
+            LEFT JOIN dim_passageiro DP ON FT.id_passageiro = DP.id_passageiro 
+            LEFT JOIN dim_contato_solicitante DS ON FT.id_solicitante = DS.id_solicitante
+            LEFT JOIN dim_rota DR ON FT.id_rota = DR.id_rota  
+            WHERE id_divisao = 2000 
+            AND nr_cartao_mascarado is not null
+            AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO
     """
 
