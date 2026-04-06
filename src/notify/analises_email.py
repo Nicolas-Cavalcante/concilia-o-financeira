@@ -13,16 +13,16 @@ from src.extract.pendencias import carregar_planilha
 # 📩 1. CLASSIFICA AGING POR CRITICIDADE
 #==============================================
 
-def classifica_agin(df):
-    contagem = df['Status do Processo'].value_counts().to_dict()
+#def classifica_agin(df):
+    #contagem = df['Status do Processo'].value_counts().to_dict()
     
-    return {
-        "Urgente": contagem.get("🔴 Urgente", 0),
-        "Critico": contagem.get("⚠️ Critico", 0),
-        "Alta": contagem.get("🟠 Alta", 0),
-        "Média": contagem.get("🟡 Média", 0),
-        "Baixa": contagem.get("🟢 Baixa", 0),
-    }
+    #return {
+    #    "Urgente": contagem.get("🔴 Urgente", 0),
+    #    "Critico": contagem.get("⚠️ Critico", 0),
+    #    "Alta": contagem.get("🟠 Alta", 0),
+    #    "Média": contagem.get("🟡 Média", 0),
+    #    "Baixa": contagem.get("🟢 Baixa", 0),
+    # }
   
 
 #==============================================
@@ -54,7 +54,7 @@ def compara_movimento(df_hoje, df_ontem):
 # 📝 3. MONTA O CORPO DO E-MAIL
 #==============================================
 
-def montar_corpo_email(stats_atual, stats_movimento):
+def montar_corpo_email(stats_movimento):
 
     return f"""
     <p style="font-family: Calibri; font-size:11pt; color: #333333;">
@@ -70,14 +70,6 @@ def montar_corpo_email(stats_atual, stats_movimento):
     </p>Após a correção, as transações serão atualizadas em até 24 horas.</p>
 
     </p>Solicitamos a regularização o quanto antes para evitar impactos para o cliente.</p>
-
-    <p><b>Detalhamento dos casos:</b></p>
-
-    <p>🔴 URGENTE: {stats_atual['Urgente']}<br>
-    ⚠️ CRÍTICA: {stats_atual['Critico']}<br>
-    🟠 ALTA: {stats_atual['Alta']}<br>
-    🟡 MÉDIA: {stats_atual['Média']}<br>
-    🟢 BAIXA: {stats_atual['Baixa']}</p>
 
     <p><b>Resumo de evolução (vs ontem):</b></p>
 

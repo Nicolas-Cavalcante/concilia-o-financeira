@@ -10,7 +10,6 @@ from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
 from src.export.salvar import salvar
 from src.notify.analises_email import (
-    classifica_agin,
     compara_movimento,
     montar_corpo_email
 )
@@ -87,6 +86,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         salvar(
             df_final=df_final,
             df_nao_localizados=df_nao_localizados,
+            df_sql=df_sql,
+            path=config.OUTPUT_BASE,
             path_corretos=config.OUTPUT_CORRETOS,
             path_incorretos=config.OUTPUT_INCORRETOS
         )
@@ -94,7 +95,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         #==============================================
         # 📊 analytics
         #==============================================
-        status_atual = classifica_agin(df_nao_localizados)
 
         # 🔴 provisório (até você ter df_ontem)
         status_movimento = {
@@ -104,7 +104,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             "Melhoraram": 0
         }
 
-        corpo_email = montar_corpo_email(status_atual, status_movimento)
+        corpo_email = montar_corpo_email(status_movimento)
 
         #==============================================
         # 📩 Chamada para E-mail

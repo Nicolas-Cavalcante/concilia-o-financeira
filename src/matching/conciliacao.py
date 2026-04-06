@@ -86,12 +86,12 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
         # k2
         mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Aut + Data + Cartão + Valor'].map(map_k2[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Aut + Data + Cartão + Valor']
+        valores = df_planilha.loc[mask, 'Chave Aut + Cartão + Data + Valor'].map(map_k2[col_origem])
+        chaves = df_planilha.loc[mask, 'Chave Aut + Cartão + Data + Valor']
 
         idx = df_planilha.loc[mask].index
         idx_match = idx[chaves.isin(chaves_validas_k2)]
@@ -99,7 +99,7 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
         # k3
         mask = df_planilha[col_dest] == '**********'
@@ -112,7 +112,7 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
         # k4
         mask = df_planilha[col_dest] == '**********'
@@ -125,7 +125,7 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
         # k5
         mask = df_planilha[col_dest] == '**********'
@@ -138,7 +138,7 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
         # k6
         mask = df_planilha[col_dest] == '**********'
@@ -151,8 +151,7 @@ def executar_matching(df_planilha, df_sql):
         df_planilha.loc[idx_match, 'match_encontrado'] = True
         df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = 'NT'
-
+        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
     # =========================
     # CRIA STATUS PARA VALIDAR CASOS TRATADOS
@@ -160,56 +159,42 @@ def executar_matching(df_planilha, df_sql):
 
     df_planilha['status'] = 'OK'
 
+    # 1. não encontrou
     df_planilha.loc[df_planilha['match_encontrado'] == False, 'status'] = 'NAO_LOCALIZADO'
 
+    # 2. encontrou mas não trouxe valor real (campo vazio vindo do SQL)
     df_planilha.loc[
-        (df_planilha['status'] == 'OK') &
-        (df_planilha[list(regras.keys())] == 'NT').any(axis=1),
+        (df_planilha['match_encontrado'] == True) &
+        (df_planilha[list(regras.keys())] == '**********').any(axis=1),
         'status'
-    ] = 'NT'
+    ] = 'Preenchidos Incompletamente'
+
+    # =========================
+    # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
+    # =========================
+
+    df_planilha.drop(columns=[
+        #'match_encontrado',
+        #'RLOC_CIA_TRATADO',
+        #'RLOC_CIA_CORRETO',
+        #'Chave Aut + Data + Valor',
+        #'Chave Aut + Cartão + Data + Valor',
+        #'Chave Loc Cia + Data + Valor',
+        #'Chave Cartão + Data + Valor + Loc Cia',
+        #'Chave Cartão + Valor + Loc Cia',
+        #'status'
+        ], inplace=True)
 
     # =========================
     # CRIA DF NÃO LOCALIZADOS PARA ENCAMINHAR PARA OPERAÇÃO
     # =========================
 
-    df_nao_localizados = df_planilha[df_planilha['status'] == 'NAO_LOCALIZADO'].copy()
-
-    # ==============================================
-    # 📊 REGRAS DE CLASSIFICAÇÃO DE ACORDO COM AGING CORTE
-    # ==============================================
-
-    def regras_status(aging):
-        if aging < 0:
-            return "Crítico"
-        elif aging == 0:
-            return "Urgente"
-        elif aging <= 5:
-            return "Alta"
-        elif aging <= 10:
-            return "Média"
-        else:
-            return "Baixa"
-
-    df_nao_localizados['Status do Processo'] = df_nao_localizados['Aging Corte'].apply(regras_status)
-    
-    # =========================
-    # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
-    # =========================
-
-    df_planilha.drop(columns=['match_encontrado'], inplace=True)
-    df_nao_localizados.drop(columns=[
-        'Chave Cartão', 
-        'Chave Cartão + '
-        'LOC CIA', 
-        'Chave Cartão Sem data',
-        'match_encontrado',
-        'status'
-        ])
+    df_nao_localizados = df_planilha[df_planilha['status'].isin(['NAO_LOCALIZADO', 'Preenchidos Incompletamente'])].copy()
 
     # =========================
     # RETORNA DATAFRAME FINAL
     # =========================
 
-    df_preenchido = df_planilha.copy()
+    df_preenchido = df_planilha[df_planilha['status'] == 'OK'].copy()
 
     return df_preenchido, df_nao_localizados
