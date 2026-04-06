@@ -51,7 +51,7 @@ def perguntar_envio_email():
 #==============================================
 
 def abrir_arquivo():
-    caminho = os.path.join("outputs", "Incorretos", "Pendências_EBTA.xlsx")
+    caminho = os.path.join("outputs", "Corretos", "Conciliados.xlsx")
 
     try:
         os.startfile(caminho)
@@ -91,7 +91,7 @@ def tela_processamento(funcao_processamento):
         opacity += 0.05
         if opacity <= 1:
             root.attributes("-alpha", opacity)
-            root.after(5, fade_in, opacity)
+            root.after(3, fade_in, opacity)
 
     fade_in()
     
