@@ -74,11 +74,11 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         time.sleep(1.5)
         df_final, df_nao_localizados = executar_matching(df_planilha, df_sql)
 
-        qtde_ok = (df_planilha['status'] == 'OK').sum()
-        qtde_erro = (df_planilha['status'] == 'NAO_LOCALIZADO').sum()
+        qtde_ok = (df_planilha['status'] == 'Ok').sum()
+        qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
 
         if atualizar_status:
-            atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} não localizados", 85)
+            atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
             time.sleep(1.0)
 
 
@@ -161,9 +161,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         "data_execucao": data_execucao,
 
         "qtd_total": len(df_planilha) if 'df_planilha' in locals() else 0,
-        "qtd_corretos": len(df_final[df_final['status'] == 'OK']) if isinstance(df_final, pd.DataFrame) else 0,
+        "qtd_corretos": len(df_final[df_final['status'] == 'Ok']) if isinstance(df_final, pd.DataFrame) else 0,
         "qtd_nao_localizados": ( 
-            len(df_nao_localizados[df_nao_localizados['status'] == 'NAO_LOCALIZADO'])
+            len(df_nao_localizados[df_nao_localizados['status'] == 'Não Localizado'])
             if isinstance(df_nao_localizados, pd.DataFrame)
             else 0
         ),

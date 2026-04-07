@@ -68,107 +68,82 @@ def executar_matching(df_planilha, df_sql):
     }
 
     # =========================
+    # NORMALIZAÇÃO
+    # =========================
+
+    colunas_validacao = list(regras.keys())
+
+    df_planilha[colunas_validacao] = (
+        df_planilha[colunas_validacao]
+        .replace('**********', '')
+        .replace(r'^\s+$', '', regex=True)
+        .fillna('')
+    )
+
+    chaves = [
+        ('Chave Aut + Data + Valor', map_k1, chaves_validas_k1),
+        ('Chave Aut + Cartão + Data + Valor', map_k2, chaves_validas_k2),
+        ('Chave Loc Cia + Data + Valor', map_k3, chaves_validas_k3),
+        ('Chave Cartão + Data + Valor', map_k4, chaves_validas_k4),
+        ('Chave Cartão + Data + Valor + Loc Cia', map_k5, chaves_validas_k5),
+        ('Chave Cartão + Valor + Loc Cia', map_k6, chaves_validas_k6),
+    ]
+
+    # =========================
     # MATCH
     # =========================
 
-    df_planilha['match_encontrado'] = False
+    df_planilha['teve_match'] = False
 
-    for col_dest, col_origem in regras.items():
+    for nome_chave, mapa, chaves_validas in chaves:
 
-        # k1
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Aut + Data + Valor'].map(map_k1[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Aut + Data + Valor']
+        # só tenta quem ainda não encontrou nada
+        mask = df_planilha['teve_match'] == False
 
         idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k1)]
+        chaves_linha = df_planilha.loc[mask, nome_chave]
 
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
+        idx_match = idx[chaves_linha.isin(chaves_validas)]
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
+        if len(idx_match) == 0:
+            continue
 
-        # k2
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Aut + Cartão + Data + Valor'].map(map_k2[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Aut + Cartão + Data + Valor']
+        # marca que essa linha encontrou sua chave definitiva
+        df_planilha.loc[idx_match, 'teve_match'] = True
 
-        idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k2)]
+        # agora preenche TODAS as colunas de uma vez
+        for col_dest, col_origem in regras.items():
 
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
+            valores = df_planilha.loc[idx_match, nome_chave].map(mapa[col_origem])
 
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
+            idx_valido = idx_match[valores.notna()]
 
-        # k3
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Loc Cia + Data + Valor'].map(map_k3[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Loc Cia + Data + Valor']
+            df_planilha.loc[idx_valido, col_dest] = valores.loc[idx_valido]
 
-        idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k3)]
-
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
-
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
-
-        # k4
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Cartão + Data + Valor'].map(map_k4[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Cartão + Data + Valor']
-
-        idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k4)]
-
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
-
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
-
-        # k5
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Cartão + Data + Valor + Loc Cia'].map(map_k5[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Cartão + Data + Valor + Loc Cia']
-
-        idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k5)]
-
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
-
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
-
-        # k6
-        mask = df_planilha[col_dest] == '**********'
-        valores = df_planilha.loc[mask, 'Chave Cartão + Valor + Loc Cia'].map(map_k6[col_origem])
-        chaves = df_planilha.loc[mask, 'Chave Cartão + Valor + Loc Cia']
-
-        idx = df_planilha.loc[mask].index
-        idx_match = idx[chaves.isin(chaves_validas_k6)]
-
-        df_planilha.loc[idx_match, 'match_encontrado'] = True
-        df_planilha.loc[idx_match, col_dest] = valores.loc[idx_match]
-
-        df_planilha.loc[idx_match[valores.loc[idx_match].isna()], col_dest] = '**********'
 
     # =========================
     # CRIA STATUS PARA VALIDAR CASOS TRATADOS
     # =========================
 
-    df_planilha['status'] = 'OK'
+    colunas_validacao = list(regras.keys())
 
-    # 1. não encontrou
-    df_planilha.loc[df_planilha['match_encontrado'] == False, 'status'] = 'NAO_LOCALIZADO'
+    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].replace('**********', '').fillna('')
 
-    # 2. encontrou mas não trouxe valor real (campo vazio vindo do SQL)
+    tem_vazio = (df_planilha[colunas_validacao] == '').any(axis=1)
+    tudo_vazio = (df_planilha[colunas_validacao] == '').all(axis=1)
+
+    df_planilha['status'] = 'Ok'
+
+    # 1.Não encontrou nenhuma chave
+    df_planilha.loc[df_planilha['teve_match'] == False, 'status'] = 'Não Localizado'
+
+    # 2.Encontrou a chave, mas ficou com coluna incompleta
     df_planilha.loc[
-        (df_planilha['match_encontrado'] == True) &
-        (df_planilha[list(regras.keys())] == '**********').any(axis=1),
+        (df_planilha['teve_match'] == True) & tem_vazio,
         'status'
-    ] = 'Preenchidos Incompletamente'
+    ] = 'Colunas com ausência de dados'
 
+    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].replace('', '**********')
     # =========================
     # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
     # =========================
@@ -189,12 +164,12 @@ def executar_matching(df_planilha, df_sql):
     # CRIA DF NÃO LOCALIZADOS PARA ENCAMINHAR PARA OPERAÇÃO
     # =========================
 
-    df_nao_localizados = df_planilha[df_planilha['status'].isin(['NAO_LOCALIZADO', 'Preenchidos Incompletamente'])].copy()
+    df_nao_localizados = df_planilha[df_planilha['status'].isin(['Não Localizado', 'Colunas com ausência de dados'])].copy()
 
     # =========================
     # RETORNA DATAFRAME FINAL
     # =========================
 
-    df_preenchido = df_planilha[df_planilha['status'] == 'OK'].copy()
+    df_preenchido = df_planilha[df_planilha['status'] == 'Ok'].copy()
 
     return df_preenchido, df_nao_localizados
