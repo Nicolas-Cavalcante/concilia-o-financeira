@@ -65,7 +65,7 @@ def abrir_arquivo():
 # Configurações da janela de processamento
 def tela_processamento(funcao_processamento):
     root.deiconify()
-    root.title("Processamento Pendências EBTA")
+    #root.title("Processamento Pendências EBTA")
 
     root.update_idletasks()  # garante medidas corretas
     root.resizable(False, False)

@@ -8,11 +8,12 @@ from openpyxl.utils import get_column_letter
 # 📑 SALVA ARQUIVOS
 #==============================================
 
-def salvar(df_final, df_nao_localizados, df_sql, path, path_corretos, path_incorretos):
+def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_corretos, path_incorretos):
 
     df_final.to_excel(path_corretos / "Conciliados.xlsx", index=False)
     df_nao_localizados.to_excel(path_incorretos / "Pendências_EBTA.xlsx", index=False)
     df_sql.to_excel(path / "df_sql.xlsx", index=False)
+    df_planilha.to_excel(path / "df_planilha.xlsx", index=False)
 
     # Esse caminho serve como base ao openpyxl para tratar o estilo na função abaixo
     df_nao_localizados_caminho = path_incorretos / "Pendências_EBTA.xlsx"
