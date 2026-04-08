@@ -6,41 +6,41 @@ from openpyxl.utils import get_column_letter
 def executar_matching(df_planilha, df_sql):
 
     # =========================
-    # CHAVES VÁLIDAS
+    # ⚙️ CRIA CHAVES VÁLIDAS REMOVENDO DUPLICADOS
     # =========================
     
-    # Chave K1
+    # Chave KEY 1 🗝️
     unicos_sql_k1 = df_sql['Chave Aut + Data + Valor'][~df_sql['Chave Aut + Data + Valor'].duplicated(keep=False)]
     unicos_plan_k1 = df_planilha['Chave Aut + Data + Valor'][~df_planilha['Chave Aut + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k1 = set(unicos_sql_k1).intersection(set(unicos_plan_k1))
 
-    # Chave K2
+    # Chave KEY 2 🗝️
     unicos_sql_k2 = df_sql['Chave Aut + Cartão + Data + Valor'][~df_sql['Chave Aut + Cartão + Data + Valor'].duplicated(keep=False)]
     unicos_plan_k2 = df_planilha['Chave Aut + Cartão + Data + Valor'][~df_planilha['Chave Aut + Cartão + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k2 = set(unicos_sql_k2).intersection(set(unicos_plan_k2))
 
-    # Chave K3
+    # Chave KEY 3 🗝️
     unicos_sql_k3 = df_sql['Chave Loc Cia + Data + Valor'][~df_sql['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
     unicos_plan_k3 = df_planilha['Chave Loc Cia + Data + Valor'][~df_planilha['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k3 = set(unicos_sql_k3).intersection(set(unicos_plan_k3))
 
-    # Chave K4
+    # Chave KEY 4 🗝️
     unicos_sql_k4 = df_sql['Chave Cartão + Data + Valor'][~df_sql['Chave Cartão + Data + Valor'].duplicated(keep=False)]
     unicos_plan_k4 = df_planilha['Chave Cartão + Data + Valor'][~df_planilha['Chave Cartão + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k4 = set(unicos_sql_k4).intersection(set(unicos_plan_k4))
 
-    # Chave K5
+    # Chave KEY 5 🗝️
     unicos_sql_k5 = df_sql['Chave Cartão + Data + Valor + Loc Cia'][~df_sql['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
     unicos_plan_k5 = df_planilha['Chave Cartão + Data + Valor + Loc Cia'][~df_planilha['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
     chaves_validas_k5 = set(unicos_sql_k5).intersection(set(unicos_plan_k5))
 
-    # Chave K6
+    # Chave KEY 6 🗝️
     unicos_sql_k6 = df_sql['Chave Cartão + Valor + Loc Cia'][~df_sql['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
     unicos_plan_k6 = df_planilha['Chave Cartão + Valor + Loc Cia'][~df_planilha['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
     chaves_validas_k6 = set(unicos_sql_k6).intersection(set(unicos_plan_k6))
 
     # =========================
-    # MAPAS
+    # 📍CRIA MAPAS ARMAZENANDO AS CHAVES VALIDAS
     # =========================
 
     map_k1 = df_sql[df_sql['Chave Aut + Data + Valor'].isin(chaves_validas_k1)].set_index('Chave Aut + Data + Valor')
@@ -51,7 +51,7 @@ def executar_matching(df_planilha, df_sql):
     map_k6 = df_sql[df_sql['Chave Cartão + Valor + Loc Cia'].isin(chaves_validas_k6)].set_index('Chave Cartão + Valor + Loc Cia')
     
     # =========================
-    # REGRAS
+    # 📝 REGRAS, AS COLUNAS SERÃO O PARAMETRO DE PREENHCIMENTO, COLUNAS A ESQUERDA SÃO AS COLUNAS QUE VEM DE df_planilha
     # =========================
 
     regras = {
@@ -68,7 +68,8 @@ def executar_matching(df_planilha, df_sql):
     }
 
     # =========================
-    # NORMALIZAÇÃO
+    # NORMALIZAÇÃO EM COLUNAS COM ASTERISCO
+    # PARA INICIAR O MATCH EVITANDO POSSÍVEIS INTERFERENCIAS
     # =========================
 
     colunas_validacao = list(regras.keys())
@@ -90,7 +91,7 @@ def executar_matching(df_planilha, df_sql):
     ]
 
     # =========================
-    # MATCH
+    # MATCH - FAZ LOOPING VALIDANDO ONDE HOUVE MATCH COM OS MAPAS E PREENCHE AS COLUNAS
     # =========================
 
     df_planilha['teve_match'] = False
@@ -105,8 +106,7 @@ def executar_matching(df_planilha, df_sql):
 
         idx_match = idx[chaves_linha.isin(chaves_validas)]
 
-        if len(idx_match) == 0:
-            continue
+        df_planilha.loc[idx_match, 'teve_match'] = True
 
         # marca que essa linha encontrou sua chave definitiva
         df_planilha.loc[idx_match, 'teve_match'] = True
@@ -116,9 +116,7 @@ def executar_matching(df_planilha, df_sql):
 
             valores = df_planilha.loc[idx_match, nome_chave].map(mapa[col_origem])
 
-            idx_valido = idx_match[valores.notna()]
-
-            df_planilha.loc[idx_valido, col_dest] = valores.loc[idx_valido]
+            df_planilha.loc[idx_match, col_dest] = valores
 
 
     # =========================
@@ -127,11 +125,10 @@ def executar_matching(df_planilha, df_sql):
 
     colunas_validacao = list(regras.keys())
 
-    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].replace('**********', '').fillna('')
+    df_planilha[colunas_validacao] = (df_planilha[colunas_validacao].replace(r'^\s+$', '', regex=True).fillna(''))
 
     tem_vazio = (df_planilha[colunas_validacao] == '').any(axis=1)
-    tudo_vazio = (df_planilha[colunas_validacao] == '').all(axis=1)
-
+    
     df_planilha['status'] = 'Ok'
 
     # 1.Não encontrou nenhuma chave
@@ -143,7 +140,16 @@ def executar_matching(df_planilha, df_sql):
         'status'
     ] = 'Colunas com ausência de dados'
 
-    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].replace('', '**********')
+    # 3.Devolve asterisco para colunas com dados incompletos
+    df_planilha.loc[
+        df_planilha['status'] == 'Colunas com ausência de dados',
+        colunas_validacao
+    ] = df_planilha.loc[
+        df_planilha['status'] == 'Colunas com ausência de dados',
+        colunas_validacao
+    ].replace('', '**********')
+
+
     # =========================
     # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
     # =========================
@@ -167,7 +173,7 @@ def executar_matching(df_planilha, df_sql):
     df_nao_localizados = df_planilha[df_planilha['status'].isin(['Não Localizado', 'Colunas com ausência de dados'])].copy()
 
     # =========================
-    # RETORNA DATAFRAME FINAL
+    # RETORNA DATAFRAME FINAL PARA SUBIR NO SITE DO BRADESCO
     # =========================
 
     df_preenchido = df_planilha[df_planilha['status'] == 'Ok'].copy()

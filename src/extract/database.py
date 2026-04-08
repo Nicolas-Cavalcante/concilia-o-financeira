@@ -59,7 +59,8 @@ def carregar_sql():
             SO.INFAPROVADOR AS Aprovador,
             SO.dsc_rota AS Trecho,
             SO.INFDIVISAO AS Departamento,
-            SO.nr_autorizacao_cartao
+            SO.nr_autorizacao_cartao,
+            SO.AUTORIZACAOCARTAOAMEX
         FROM
         (SELECT 
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
@@ -75,7 +76,8 @@ def carregar_sql():
             INFAPROVADOR,
             DR.dsc_rota,
             INFDIVISAO,
-            nr_autorizacao_cartao
+            nr_autorizacao_cartao,
+            AUTORIZACAOCARTAOAMEX
         FROM fato_aereo FT
             LEFT JOIN dim_passageiro DP ON FT.id_passageiro = DP.id_passageiro 
             LEFT JOIN dim_contato_solicitante DS ON FT.id_solicitante = DS.id_solicitante

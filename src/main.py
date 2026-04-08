@@ -87,6 +87,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             df_final=df_final,
             df_nao_localizados=df_nao_localizados,
             df_sql=df_sql,
+            df_planilha=df_planilha,
             path=config.OUTPUT_BASE,
             path_corretos=config.OUTPUT_CORRETOS,
             path_incorretos=config.OUTPUT_INCORRETOS
