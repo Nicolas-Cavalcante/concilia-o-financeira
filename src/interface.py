@@ -68,6 +68,7 @@ def abrir_arquivo():
     #==============================================
 
 def tela_processamento(funcao_processamento):
+
     root.deiconify()
     root.title("")
 
@@ -148,9 +149,9 @@ def tela_processamento(funcao_processamento):
 
     percent_label.pack(pady=(0,10))
 
-#==============================================
-# CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
-#==============================================
+    #==============================================
+    # CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
+    #==============================================
 
     buttons_frame = ctk.CTkFrame(container, fg_color="transparent")
 
@@ -166,9 +167,9 @@ def tela_processamento(funcao_processamento):
         command=lambda: abrir_arquivo()
     )
 
-#==============================================
-# CRIA BOTÃO PARA FECHAR O ARQUIVO NO FINAL DO PROCESSAMENTO
-#==============================================
+    #==============================================
+    # CRIA BOTÃO PARA FECHAR O ARQUIVO NO FINAL DO PROCESSAMENTO
+    #==============================================
 
     btn_fechar = ctk.CTkButton(
         buttons_frame,
@@ -187,8 +188,14 @@ def tela_processamento(funcao_processamento):
 
 
 #==============================================
-# CRIA CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
+# Configurações execução do processamento
 #==============================================
+
+
+
+    #==============================================
+    # CRIA CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
+    #==============================================
 
     current_progress = 0
     target_progress = 0
@@ -206,9 +213,9 @@ def tela_processamento(funcao_processamento):
             current_progress = target_progress
             progress.set(current_progress)
 
-#==============================================
-# ✅ FUNÇÃO DE ATUALIZAÇÃO
-#==============================================
+    #==============================================
+    # ✅ FUNÇÃO DE ATUALIZAÇÃO
+    #==============================================
 
     def atualiza_status(texto, progresso=None):
         def update():
@@ -219,18 +226,19 @@ def tela_processamento(funcao_processamento):
             if progresso is not None:
                 progress.stop()
                 progress.configure(mode="determinate")
-                
+
                 target_progress = progresso / 100
                 animar_progresso()
+                
                 percent_label.configure(text=f"{progresso}%")
 
             root.update_idletasks()
 
         root.after(0,update)
 
-#==============================================
-# ✅ FUNÇÃO PARA RODAR O PROCESSO
-#==============================================
+    #==============================================
+    # ✅ FUNÇÃO PARA RODAR O PROCESSO
+    #==============================================
 
     def rodar():
         try:
