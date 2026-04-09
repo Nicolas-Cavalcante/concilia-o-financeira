@@ -79,7 +79,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
 
         if atualizar_status:
             atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
-            time.sleep(1.0)
+            #time.sleep(1.0)
 
 
         # Saída
@@ -93,6 +93,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             path_incorretos=config.OUTPUT_INCORRETOS
         )
 
+        atualizar_status("Salvando arquivos nas pastas...", 90)
         #==============================================
         # 📊 analytics
         #==============================================
@@ -124,7 +125,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
 
         if destinatarios and enviar_email_flag:
             if atualizar_status:
-                atualizar_status("Encaminhando e-mail para operação 📩", 90)
+                atualizar_status("Encaminhando e-mail para operação 📩", 93)
 
             enviar_email(
                 email_origem=os.getenv("Email_User"),
@@ -141,7 +142,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         time.sleep(1.5)
     
 
-        atualizar_status("Finalizado", 100)
+        atualizar_status("", 100)
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================

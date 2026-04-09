@@ -16,10 +16,4 @@ LOG_PATH.parent.mkdir(exist_ok=True)
 OUTPUT_CORRETOS.mkdir(parents=True, exist_ok=True)
 OUTPUT_INCORRETOS.mkdir(parents=True, exist_ok=True)
 
-#teste
-MAIOR_MARGEM = 28
-MENOR_MARGEM = 10
-DIAS_ALERTA = 5
-DIAS_CRITICO = 2
-
 
