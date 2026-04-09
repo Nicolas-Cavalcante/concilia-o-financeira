@@ -1,35 +1,47 @@
-import os
 import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.drawing.image import Image
+from openpyxl import Workbook
+from pathlib import Path
 
 
+#Esse arquivo é responsável pela importação das bases
+# E aplicação do layout em cada arquivo.
 #==============================================
 # 📑 SALVA ARQUIVOS
 #==============================================
 
 def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_corretos, path_incorretos):
 
-    df_final.to_excel(path_corretos / "Conciliados.xlsx", index=False)
+    salvar_df_final_formatado(
+        df_final,
+        path_corretos / "Conciliados.xlsx",
+        #Caminho da Logo do bradesco
+        caminho_logo= Path("inputs") / "Logo_Bradesco.png"
+        )
+    
     df_nao_localizados.to_excel(path_incorretos / "Pendências_EBTA.xlsx", index=False)
     df_sql.to_excel(path / "df_sql.xlsx", index=False)
     df_planilha.to_excel(path / "df_planilha.xlsx", index=False)
 
     # Esse caminho serve como base ao openpyxl para tratar o estilo na função abaixo
     df_nao_localizados_caminho = path_incorretos / "Pendências_EBTA.xlsx"
-    df_final_caminho = path_corretos / "Conciliados.xlsx"
-    # 3. Aplica a formatação visual (Ícones e Cores)
-    aplicar_estilo_visual([df_nao_localizados_caminho, df_final_caminho])
+    df_planilha= path / "df_planilha.xlsx"
+    
+    # 3. Aplica a formatação visual
+    aplicar_estilo_visual([df_nao_localizados_caminho])
 
 
 #==============================================
-# ⚙️ APLICA ESTILO NAS TABELAS
+# ✒️ APLICA ESTILO NAS TABELAS
 #==============================================
 
 def aplicar_layout(ws):
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
-    # Cabeçalho
+    # =========================
+    # CABEÇALHO
+    # =========================
     header_fill = PatternFill("solid", fgColor="1F4E78")
     header_font = Font(color="FFFFFF", bold=True)
 
@@ -40,11 +52,15 @@ def aplicar_layout(ws):
 
     ws.row_dimensions[1].height = 25
 
-    # Filtro + Freeze
+    # =========================
+    # FILTRO + FREEZE
+    # =========================
     ws.auto_filter.ref = ws.dimensions
     ws.freeze_panes = "A2"
 
-    # Borda leve
+    # =========================
+    # BORDA LEVE
+    # =========================
     thin = Side(style="thin", color="D9D9D9")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
@@ -52,7 +68,9 @@ def aplicar_layout(ws):
         for cell in row:
             cell.border = border
 
-    # Largura automática
+    # =========================
+    # LARGURA AUTOMÁTICA
+    # =========================
     for col in ws.columns:
         max_length = 0
         col_letter = col[0].column_letter
@@ -65,38 +83,79 @@ def aplicar_layout(ws):
 
 
 #==============================================
-# ⚙️ APLICA ESTILO NA COLUNA STATUS DO PROCESSAMENTO
+# ✒️ APLICA ESTILO SOMENTE EM DF_FINAL PARA EXPORTAR NO LAYOUT DO BRADESCO
 #==============================================
 
-def aplicar_status(ws):
-    from openpyxl.styles import Font, Alignment
+def salvar_df_final_formatado(df_final, caminho_arquivo, caminho_logo):
 
-    estilos = {
-        "Crítico": {"icone": "⚠", "cor": "C00000"},
-        "Urgente": {"icone": "⬤", "cor": "FD4C00"},
-        "Alta":    {"icone": "⬤", "cor": "ED7D31"},
-        "Média":   {"icone": "⬤", "cor": "EDBE33"},
-        "Baixa":   {"icone": "⬤", "cor": "70AD47"}
-    }
+    wb = Workbook()
+    ws = wb.active
 
-    col_idx = None
-    for cell in ws[1]:
-        if cell.value == "Status do Processo":
-            col_idx = cell.column
-            break
+    HEADER_ROW = 4
+    DATA_START_ROW = 5
 
-    if not col_idx:
-        return
+    # =========================
+    # TÍTULO INICIAL
+    # =========================
+    ws["A1"] = "GERENCIAR PENDENCIAS"
+    ws["A1"].font = Font(size=14, bold=True)
+    ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
 
-    for row in range(2, ws.max_row + 1):
-        cell = ws.cell(row=row, column=col_idx)
-        status = str(cell.value).strip()
+    # =========================
+    # LOGO
+    # =========================
+    img = Image(caminho_logo)
+    img.height = 60
+    img.width = 220
+    ws.add_image(img, "A2")
+    ws.row_dimensions[2].height = 35
+    ws.row_dimensions[3].height = 35
 
-        if status in estilos:
-            config = estilos[status]
-            cell.value = f"{config['icone']} {status}"
-            cell.font = Font(bold=True)  # sem cor, como você decidiu
-            cell.alignment = Alignment(horizontal='left')
+    # =========================
+    # CABEÇALHO (LINHA 4)
+    # =========================
+    header_fill = PatternFill("solid", fgColor="969696")
+    header_font = Font(
+        name="Arial",
+        size=11,
+        color="333399"
+        )
+    ws.row_dimensions[HEADER_ROW].height = 23.3
+
+    for col_idx, col_name in enumerate(df_final.columns, start=1):
+        cell = ws.cell(row=HEADER_ROW, column=col_idx, value=col_name)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    # =========================
+    # DADOS (A PARTIR DA LINHA 5)
+    # =========================
+    for row_idx, row in enumerate(df_final.values, start=DATA_START_ROW):
+        for col_idx, value in enumerate(row, start=1):
+            ws.cell(row=row_idx, column=col_idx, value=value)
+
+    # =========================
+    # FILTRO + FREEZE
+    # =========================
+    ws.auto_filter.ref = f"A{HEADER_ROW}:{ws.cell(row=4, column=len(df_final.columns)).coordinate}"
+    ws.freeze_panes = f"A{DATA_START_ROW}"
+
+    # =========================
+    # AJUSTE DE COLUNA
+    # =========================
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+
+        ws.column_dimensions[col_letter].width = min(max_length + 2, 40)
+
+    wb.save(caminho_arquivo)
+
 
 def aplicar_estilo_visual(caminhos):
 
@@ -105,6 +164,5 @@ def aplicar_estilo_visual(caminhos):
         ws = wb.active
 
         aplicar_layout(ws)   # SEMPRE aplica
-        aplicar_status(ws)   # SÓ se existir
 
         wb.save(caminho)

@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import customtkinter as ctk
 import threading
 from tkinter import messagebox
 from tkinter import filedialog
@@ -62,22 +63,29 @@ def abrir_arquivo():
 #🔧 3. POPUP DE PROCESSAMENTO DO CÓDIGO
 #==============================================
 
-# Configurações da janela de processamento
+    #==============================================
+    # Configurações da janela de processamento
+    #==============================================
+
 def tela_processamento(funcao_processamento):
     root.deiconify()
-    #root.title("Processamento Pendências EBTA")
+    root.title("")
+
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("green")
 
     root.update_idletasks()  # garante medidas corretas
     root.resizable(False, False)
-        # tamanho da janela
+    # tamanho da janela
     largura = 420
     altura = 260
 
+    
     # tamanho da tela
     largura_tela = root.winfo_screenwidth()
     altura_tela = root.winfo_screenheight()
 
-    # posição central
+    # posição central da tela
     x = (largura_tela // 2) - (largura // 2)
     y = (altura_tela // 2) - (altura // 2)
 
@@ -88,129 +96,162 @@ def tela_processamento(funcao_processamento):
     root.attributes("-alpha", 0.0)
 
     def fade_in(opacity=0.0):
-        opacity += 0.05
+        opacity += 0.03
         if opacity <= 1:
             root.attributes("-alpha", opacity)
-            root.after(3, fade_in, opacity)
+            root.after(2, fade_in, opacity)
 
     fade_in()
     
     # Inicia ajustes no container
-    container = tk.Frame(root, bg="#F5F6FA")
+    container = ctk.CTkFrame(root, fg_color="#F5F6FA")
     container.pack(expand=True, fill="both")
 
-    title = tk.Label(
+    # Titulo do Processamento
+    title = ctk.CTkLabel(
         container,
         text="Processamento EBTA",
-        font=("Segoe UI", 14, "bold"),
-        bg="#F5F6FA"
+        font=("Calibri", 16, "bold"),
+        fg_color="#F5F6FA"
     )
     title.pack(pady=(20,10))
-
-    label = tk.Label(
+    
+    # Subtitulo do processamento
+    label = ctk.CTkLabel(
         container,
         text="Preparando...",
-        font=("Segoe UI", 11),
-        bg="#F5F6FA"
+        font=("Calibri", 14, "bold")
     )
     label.pack(pady=10)
 
-    style = ttk.Style()
-    style.theme_use('default')
-
-    style.configure(
-        "Custom.Horizontal.TProgressbar",
-        troughcolor="#E0E0E0",
-        background="#2ECC71",  # verde mais moderno
-        thickness=12
-    )
-
-    progress = ttk.Progressbar(
+    # Barra de progresso
+    progress = ctk.CTkProgressBar(
         container,
-        style="Custom.Horizontal.TProgressbar",
-        mode="determinate",
-        length=300,
-        maximum=100
+        width=300,
+        height=12,
+        corner_radius=4,
+        progress_color="#2ECC71"
     )
+
+    progress.set(0)
     progress.pack(pady=10)
 
-    percent_label = tk.Label(
+    progress.configure(mode="indeterminate")
+    progress.start()
+
+    # Percentual de carregamento
+    percent_label = ctk.CTkLabel(
         container,
         text="0%",
-        font=("Segoe UI", 10, "bold"),
-        fg="#020704",
-        bg="#F5F6FA"
+        font=("Calibri", 12, "bold")
     )
 
-# CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
-    buttons_frame = tk.Frame(container, bg="#F5F6FA")
+    percent_label.pack(pady=(0,10))
 
-    btn_abrir = tk.Button(
+#==============================================
+# CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
+#==============================================
+
+    buttons_frame = ctk.CTkFrame(container, fg_color="transparent")
+
+    btn_abrir = ctk.CTkButton(
         buttons_frame,
-        text="Abrir arquivo de pendências",
-        font=("Segoe UI", 10),
-        bg="#2ECC71",
-        fg="white",
-        relief="flat",
-        padx=15,
-        pady=10,
+        text="Abrir arquivo",
+        width=180,
+        height=35,
+        corner_radius=5,
+        fg_color="#50C480",
+        hover_color="#287C4B",  # 👈 hover automático
+        text_color="white",
         command=lambda: abrir_arquivo()
     )
+
+#==============================================
 # CRIA BOTÃO PARA FECHAR O ARQUIVO NO FINAL DO PROCESSAMENTO
-    btn_fechar = tk.Button(
+#==============================================
+
+    btn_fechar = ctk.CTkButton(
         buttons_frame,
         text="Fechar",
-        font=("Segoe UI", 10),
-        bg="#BDC3C7",
-        relief="flat",
-        padx=15,
-        pady=10,
+        width=180,
+        height=35,
+        corner_radius=5,
+        fg_color="#BDC3C7",
+        hover_color="#A6ACAF",
+        text_color="black",
         command=root.destroy
     )
 
-    btn_abrir.pack(side="left", padx=5)
-    btn_fechar.pack(side="left", padx=5)
+    btn_abrir.pack(side="left", padx=8)
+    btn_fechar.pack(side="left", padx=8)
 
-# CONFIGURA LABEL DE SUCESSO AO CONCLUIR O PROCESSAMENTO
-    success_frame = tk.Frame(container, bg="#E8F8F0", bd=0)
-    success_label = tk.Label(
-        success_frame,
-        text="✔ Processamento concluído",
-        font=("Segoe UI", 12, "bold"),
-        fg="#0C6832",
-        bg="#F5F6FA",
-        padx=10,
-        pady=8
-    )
-    success_label.pack()
-    percent_label.pack(pady=(0,10))
 
+#==============================================
+# CRIA CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
+#==============================================
+
+    current_progress = 0
+    target_progress = 0
+
+    def animar_progresso():
+        nonlocal current_progress, target_progress
+
+        diff = target_progress - current_progress
+
+        if abs(diff) > 0.001:
+            current_progress += diff * 0.1
+            progress.set(current_progress)
+            root.after(16, animar_progresso)
+        else:
+            current_progress = target_progress
+            progress.set(current_progress)
+
+#==============================================
 # ✅ FUNÇÃO DE ATUALIZAÇÃO
+#==============================================
+
     def atualiza_status(texto, progresso=None):
         def update():
-            label.config(text=texto)
+            nonlocal target_progress
+
+            label.configure(text=texto)
+
             if progresso is not None:
-                progress['value'] = progresso
-                percent_label.config(text=f"{progresso}%")
+                progress.stop()
+                progress.configure(mode="determinate")
+                
+                target_progress = progresso / 100
+                animar_progresso()
+                percent_label.configure(text=f"{progresso}%")
+
             root.update_idletasks()
+
         root.after(0,update)
 
+#==============================================
 # ✅ FUNÇÃO PARA RODAR O PROCESSO
+#==============================================
+
     def rodar():
         try:
             funcao_processamento(atualiza_status)
 
-            # MOSTRA SUCESSO 
+            # Mostra sucesso 
             def mostrar_sucesso():
-                progress['value'] = 100
-                percent_label.config(text="100%")
-                label.config(text="Processamento finalizado")
+                animar_progresso(1)
+                percent_label.configure(text="100%")
 
-                success_frame.pack(pady=(10,5))   # mostra o bloco verde
-                buttons_frame.pack(pady=(5,10))   # mostra os botões
+                label.configure(
+                    text="✔ Processamento concluído",
+                    text_color="#0C6832",
+                    font=("Calibri", 12)
+                )
+
+                buttons_frame.pack(pady=(10,10))
 
             root.after(0, mostrar_sucesso)
-
+        
+        # Exceção para mostrar erro em caso de arquivos abertos ao iniciar o processamento
         except PermissionError:
             root.after(0, lambda: messagebox.showerror(
                 "⚠️ Arquivo em uso",
