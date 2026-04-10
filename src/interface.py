@@ -293,7 +293,7 @@ def tela_processamento(funcao_processamento):
                 label.configure(
                     text="✔ Processamento concluído",
                     text_color="#0C6832",
-                    font=("Calibri", 12)
+                    font=("Calibri", 14)
                 )
 
                 buttons_frame.pack(pady=(10,10))

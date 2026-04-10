@@ -123,7 +123,38 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             "Melhoraram": 0
         }
 
-        corpo_email = montar_corpo_email(status_movimento)
+        # =========================
+        # CRIA TABELA PARA ENCAMINHAR NO CORPO DO EMAIL
+        # =========================
+
+        html_tabela = "<p>Sem pendências no momento.</p>"
+        if not df_nao_localizados.empty:
+            tabela_clientes = (
+                df_nao_localizados
+                .groupby('Nome da Empresa')
+                .size()
+                .reset_index(name='Qtde Pendente')
+                .sort_values(by='Qtde Pendente', ascending=False)
+                .head(10)
+            )
+
+            tabela_clientes.index.name=None
+
+            html_tabela = tabela_clientes.to_html(
+                index=False,
+                border=0,
+                justify='center'
+                ).replace(
+                '<table',
+                '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
+                ).replace(
+                    '<th',
+                    '<th style="border:1px solid #ccc;padding:5px;background-color:#f2f2f2;"'
+                ).replace(
+                    '<td',
+                    '<td style="border:1px solid #ccc;padding:5px;text-align:center;"'
+                )
+            corpo_email = montar_corpo_email(html_tabela)
 
         #==============================================
         # 📩 Chamada para E-mail
@@ -152,7 +183,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             #  2. ENVIO DIRETORIA
             if existem_urgentes:
 
-                qtde_casos = len(df_nao_localizados["Dias Restantes"] <= 5).sum()
+                qtde_casos = (df_nao_localizados["Dias Restantes"] <= 5).sum()
                 dias_min = df_nao_localizados['Dias Restantes'].min()
                 corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
 
