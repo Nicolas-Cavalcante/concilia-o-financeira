@@ -32,9 +32,12 @@ def iniciar_processo():
     if not input1 or not input2:
         messagebox.showerror("Erro", "Selecione ambos os arquivos")
         return
-
+    
+    controle = {"cancelar": False}
     enviar_email = perguntar_envio_email()
-    tela_processamento(lambda atualiza_status: main(input1, input2, enviar_email, atualiza_status))
+    tela_processamento(
+        lambda atualiza_status: main(input1, input2, enviar_email, atualiza_status, controle)
+        )
 
 #==============================================
 #🔧 2. CONFIRMAÇÃO DE ENVIO DO E-MAIL
@@ -69,6 +72,7 @@ def abrir_arquivo():
 
 def tela_processamento(funcao_processamento):
 
+    erro_ocorrido = False
     root.deiconify()
     root.title("")
 
@@ -191,10 +195,8 @@ def tela_processamento(funcao_processamento):
 # Configurações execução do processamento
 #==============================================
 
-
-
     #==============================================
-    # CRIA CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
+    # CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
     #==============================================
 
     current_progress = 0
@@ -214,6 +216,35 @@ def tela_processamento(funcao_processamento):
             progress.set(current_progress)
 
     #==============================================
+    # CRIA FUNÇÃO PARA TRATAR ERROS
+    #==============================================
+
+
+    def tratar_erro_ui(e):
+        nonlocal erro_ocorrido
+        erro_ocorrido=True
+
+        try:
+            progress.stop()
+        except:
+            pass
+
+        # atualiza UI
+        label.configure(
+            text="❌ Erro no processamento",
+            text_color="red"
+        )
+
+        percent_label.configure(text="Erro")
+
+        # mostra popup
+        messagebox.showerror("Erro", str(e))
+
+        # opcional: fecha depois
+        root.after(3000, root.destroy)
+
+
+    #==============================================
     # ✅ FUNÇÃO DE ATUALIZAÇÃO
     #==============================================
 
@@ -221,18 +252,25 @@ def tela_processamento(funcao_processamento):
         def update():
             nonlocal target_progress
 
-            label.configure(text=texto)
+            if erro_ocorrido:
+                return
+            
+            try:
+                label.configure(text=texto)
 
-            if progresso is not None:
-                progress.stop()
-                progress.configure(mode="determinate")
+                if progresso is not None:
+                    progress.stop()
+                    progress.configure(mode="determinate")
 
-                target_progress = progresso / 100
-                animar_progresso()
-                
-                percent_label.configure(text=f"{progresso}%")
+                    target_progress = progresso / 100
+                    animar_progresso()
+                    
+                    percent_label.configure(text=f"{progresso}%")
 
-            root.update_idletasks()
+                root.update_idletasks()
+
+            except Exception as e:
+                tratar_erro_ui(e)
 
         root.after(0,update)
 
@@ -246,7 +284,10 @@ def tela_processamento(funcao_processamento):
 
             # Mostra sucesso 
             def mostrar_sucesso():
-                animar_progresso(1)
+                nonlocal target_progress
+
+                target_progress = 1
+                animar_progresso()
                 percent_label.configure(text="100%")
 
                 label.configure(

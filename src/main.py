@@ -10,7 +10,7 @@ from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
 from src.export.salvar import salvar
 from src.notify.analises_email import (
-    compara_movimento,
+    montar_corpo_diretoria,
     montar_corpo_email
 )
 from src.log.logger import registrar_execucao
@@ -34,7 +34,7 @@ import time
 
 
 
-def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
+def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle):
 
     load_dotenv()
     nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
@@ -48,13 +48,22 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             time.sleep(1.7)
         df_planilha = carregar_planilha(input_path)
 
+        if controle["cancelar"]:
+            return
+
         if atualizar_status:
             atualizar_status("Carregando base de clientes...", 20)
         df_base_email = carregar_base_email(input_path2)
 
+        if controle["cancelar"]:
+            return
+
         if atualizar_status:
             atualizar_status("Conectando ao banco...", 35)
         df_sql = carregar_sql()
+
+        if controle["cancelar"]:
+            return
 
         atualizar_status("Base carregada. Iniciando processamento...", 55)
 
@@ -68,11 +77,17 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             atualizar_status("Trabalhando nas bases...", 65)
             time.sleep(2.5)
         df_planilha = tratar_dados(df_planilha)
-        dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
+
+        if controle["cancelar"]:
+            return
 
         atualizar_status("Executando conciliação...", 75)
         time.sleep(1.5)
         df_final, df_nao_localizados = executar_matching(df_planilha, df_sql)
+        dias_para_corte = df_nao_localizados['Dias Restantes'].min()
+
+        if controle["cancelar"]:
+            return
 
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
@@ -81,6 +96,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
             atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
             #time.sleep(1.0)
 
+        if controle["cancelar"]:
+            return
 
         # Saída
         salvar(
@@ -112,25 +129,19 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
         # 📩 Chamada para E-mail
         #==============================================
 
-        existem_urgentes = (df_nao_localizados['Aging Corte'] < 0).any() # Verifica casos urgentes
+        existem_urgentes = (df_nao_localizados['Dias Restantes'] < 5).any() # Verifica casos urgentes
 
-        cc = [] # Cria cópia no email vazia
+        operacao = definir_destinatarios(dias_para_corte, df_base_email)
+        diretoria = os.getenv("Email_Diretoria").split(";")
 
-        if existem_urgentes:
-            cc = os.getenv("Email_Diretoria").split(";")
-
-        dias_para_corte = df_planilha['Aging Corte'].astype(int).min()
-
-        destinatarios = definir_destinatarios(dias_para_corte, df_base_email)
-
-        if destinatarios and enviar_email_flag:
+        #  1. ENVIO OPERAÇÃO
+        if enviar_email_flag:
             if atualizar_status:
                 atualizar_status("Encaminhando e-mail para operação 📩", 93)
 
             enviar_email(
                 email_origem=os.getenv("Email_User"),
-                destinatarios=destinatarios,
-                cc=cc,
+                destinatarios=operacao,
                 assunto="Casos não identificados - EBTA",
                 corpo=corpo_email,
                 anexos=[
@@ -138,11 +149,26 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status=None):
                 ]
             )
             
-        atualizar_status("Finalizando...", 95)
-        time.sleep(1.5)
-    
+            #  2. ENVIO DIRETORIA
+            if existem_urgentes:
 
-        atualizar_status("", 100)
+                qtde_casos = len(df_nao_localizados["Dias Restantes"] <= 5).sum()
+                dias_min = df_nao_localizados['Dias Restantes'].min()
+                corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
+
+                enviar_email(
+                    email_origem=os.getenv("Email_User"),
+                    destinatarios=diretoria,
+                    assunto="⚠️ Pendências próximas ao fechamento",
+                    corpo=corpo_diretoria,
+                    anexos=None
+                )
+
+            atualizar_status("Finalizando...", 95)
+            time.sleep(1.5)
+        
+
+            atualizar_status("", 100)
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================
@@ -186,4 +212,4 @@ if __name__ == "__main__":
     INPUT_PATH = Path(args.input1)
     INPUT_PATH2 = Path(args.input2)
 
-    main(INPUT_PATH, INPUT_PATH2, True)
+    main(INPUT_PATH, INPUT_PATH2, True, None, {"cancelar": False})
