@@ -10,22 +10,6 @@
 from src.extract.pendencias import carregar_planilha
 
 #==============================================
-# 📩 1. CLASSIFICA AGING POR CRITICIDADE
-#==============================================
-
-#def classifica_agin(df):
-    #contagem = df['Status do Processo'].value_counts().to_dict()
-    
-    #return {
-    #    "Urgente": contagem.get("🔴 Urgente", 0),
-    #    "Critico": contagem.get("⚠️ Critico", 0),
-    #    "Alta": contagem.get("🟠 Alta", 0),
-    #    "Média": contagem.get("🟡 Média", 0),
-    #    "Baixa": contagem.get("🟢 Baixa", 0),
-    # }
-  
-
-#==============================================
 # 🔄️ 2. COMPARA MOVIMENTO DAS PENDÊNCIAS
 #==============================================
 
@@ -73,10 +57,20 @@ def montar_corpo_email(stats_movimento):
 
     <p><b>Resumo de evolução (vs ontem):</b></p>
 
-    <p>🔺 +{stats_movimento['Novos']} novos casos<br>
-    🔻 {stats_movimento['Resolvidos']} resolvidos<br>
-    ⚠️ {stats_movimento['Pioraram']} se aproximaram do fechamento<br>
-    ✅ {stats_movimento['Melhoraram']} ganharam prazo</p>
+    """
+
+def montar_corpo_diretoria(qtde_casos, dias_min):
+
+    return f"""
+    <p>Prezados,</p>
+
+    <p>Identificamos <b>{qtde_casos} pendências</b> com proximidade de fechamento.</p>
+
+    <p>O menor prazo atual é de <b>{dias_min} dias para o fechamento do cartão</b>.</p>
+
+    <p>Os casos foram encaminhados para operação e caso não forem ajustados irão sem informação na fatura do cliente</p>
+
+    <p>Atualizaremos em caso de evolução relevante.</p>
     """
 
 

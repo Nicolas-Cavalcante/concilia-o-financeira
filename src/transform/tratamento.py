@@ -70,8 +70,10 @@ def tratar_dados(df):
 
     #Cria coluna data de fechamento
     data_execucao = pd.Timestamp.today().normalize()
+    hoje = pd.Timestamp.today().normalize()
 
     df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
+    df['Dias Restantes'] = (df['Data Fechamento Cartão'] - hoje).dt.days
 
 
     return df

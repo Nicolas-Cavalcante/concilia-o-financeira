@@ -1,5 +1,11 @@
 import win32com.client as win32
 
+#Esse arquivo é responsável pela estruturação do e-mail,
+# utilizando a biblioteca win32com como fonte principal.
+#==============================================
+# 📑 ENVIO DE E-MAILS
+#==============================================
+
 
 def enviar_email(email_origem,destinatarios, assunto, corpo, anexos=None, cc=None):
     outlook = win32.Dispatch("Outlook.Application")
