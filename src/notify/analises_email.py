@@ -7,7 +7,7 @@
 #   monta_corpo_email.
 #==============================================
 
-from src.extract.pendencias import carregar_planilha
+from src.matching.conciliacao import executar_matching
 
 #==============================================
 # 🔄️ 2. COMPARA MOVIMENTO DAS PENDÊNCIAS
@@ -33,12 +33,13 @@ def compara_movimento(df_hoje, df_ontem):
         "Pioraram": len(pioraram),
         "Melhoraram": len(melhoraram),
     }
-    
+
+
 #==============================================
 # 📝 3. MONTA O CORPO DO E-MAIL
 #==============================================
 
-def montar_corpo_email(stats_movimento):
+def montar_corpo_email(html_tabela):
 
     return f"""
     <p style="font-family: Calibri; font-size:11pt; color: #333333;">
@@ -46,9 +47,13 @@ def montar_corpo_email(stats_movimento):
 
     <p>Identificamos pendências em registros do seu atendimento.</p>
 
-    <p><b>Pontos importantes:</b><br>
+    <p>Os casos apontados no arquivo não foram localizados no sistema ou estão com informações faltantes.
+
     </p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner, pois essas informações não foram localizadas no sistema.
 
+    <p><b>Resumo por Squad:</b><br>
+    {html_tabela}
+    
     </p>Caso os dados não sejam ajustados, os campos permanecerão sem informação na fatura do cliente.</p>
 
     </p>Após a correção, as transações serão atualizadas em até 24 horas.</p>

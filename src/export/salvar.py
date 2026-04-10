@@ -1,9 +1,8 @@
 import openpyxl
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.drawing.image import Image
 from openpyxl import Workbook
 from pathlib import Path
-
 
 #Esse arquivo é responsável pela importação das bases
 # E aplicação do layout em cada arquivo.
@@ -97,19 +96,39 @@ def salvar_df_final_formatado(df_final, caminho_arquivo, caminho_logo):
     # =========================
     # TÍTULO INICIAL
     # =========================
-    ws["A1"] = "GERENCIAR PENDENCIAS"
-    ws["A1"].font = Font(size=14, bold=True)
+    ws["A1"] = "GERENCIAR PENDÊNCIAS"
+    ws["A1"].font = Font("Arial",size=10, bold=True)
     ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
 
     # =========================
     # LOGO
     # =========================
     img = Image(caminho_logo)
-    img.height = 60
-    img.width = 220
+    img.height = 52
+    img.width = 256
     ws.add_image(img, "A2")
-    ws.row_dimensions[2].height = 35
-    ws.row_dimensions[3].height = 35
+
+    # =========================
+    # DEFINE ALTURA DAS LINHAS
+    # =========================
+    ws.row_dimensions[2].height = 12.8
+    ws.row_dimensions[3].height = 33.8
+
+    ws.row_dimensions[HEADER_ROW].height = 23.3
+
+    
+    # =========================
+    # CRIA ESTILO DA TABELA
+    # =========================
+
+    thin = Side(style="thin", color="000000")
+
+    border = Border(
+        left=thin,
+        right=thin,
+        top=thin,
+        bottom=thin
+    )
 
     # =========================
     # CABEÇALHO (LINHA 4)
@@ -117,10 +136,10 @@ def salvar_df_final_formatado(df_final, caminho_arquivo, caminho_logo):
     header_fill = PatternFill("solid", fgColor="969696")
     header_font = Font(
         name="Arial",
-        size=11,
-        color="333399"
+        size=8,
+        color="333399",
+        bold=True
         )
-    ws.row_dimensions[HEADER_ROW].height = 23.3
 
     for col_idx, col_name in enumerate(df_final.columns, start=1):
         cell = ws.cell(row=HEADER_ROW, column=col_idx, value=col_name)
@@ -131,9 +150,24 @@ def salvar_df_final_formatado(df_final, caminho_arquivo, caminho_logo):
     # =========================
     # DADOS (A PARTIR DA LINHA 5)
     # =========================
+    row_font = Font(
+        name="Arial",
+        size=10
+    )
+
     for row_idx, row in enumerate(df_final.values, start=DATA_START_ROW):
         for col_idx, value in enumerate(row, start=1):
-            ws.cell(row=row_idx, column=col_idx, value=value)
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell.font = row_font
+
+    for r in ws.iter_rows(
+        min_row=HEADER_ROW,
+        max_row=ws.max_row,
+        min_col=1,
+        max_col=len(df_final.columns)
+    ):
+        for cell in r:
+            cell.border = border
 
     # =========================
     # FILTRO + FREEZE
