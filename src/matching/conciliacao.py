@@ -1,9 +1,8 @@
 import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, Alignment, Color
-from openpyxl.utils import get_column_letter
 
-def executar_matching(df_planilha, df_sql):
+def executar_matching(df_planilha, df_sql, df_depara):
 
     # =========================
     # ⚙️ CRIA CHAVES VÁLIDAS REMOVENDO DUPLICADOS
@@ -54,7 +53,7 @@ def executar_matching(df_planilha, df_sql):
     # 📝 REGRAS, AS COLUNAS SERÃO O PARAMETRO DE PREENHCIMENTO, COLUNAS A ESQUERDA SÃO AS COLUNAS QUE VEM DE df_planilha
     # =========================
 
-    regras = {
+    regras_padrao = {
         'Ticket': 'Bilhete',
         'Passageiro': 'Nome do Passageiro',
         'Trecho Voado': 'Trecho',
@@ -67,12 +66,36 @@ def executar_matching(df_planilha, df_sql):
         'Localizador': 'Localizador'
     }
 
+
+    regras_clientes = (
+        df_depara
+        .groupby('Cliente')
+        .apply(lambda x: dict(zip(
+            x['Campo Arquivo do cliente'], # Campo destino depara
+            x['Nome do Campo']             # Campo origem depara
+            )))          
+        .to_dict()
+    )
+
+    
+    def regras_finais(cliente, regras_padrao, regras_clientes):
+
+        regras_finais = regras_padrao.copy()
+
+        if 'DEFAULT' in regras_clientes:
+            regras_finais.update(regras_clientes['DEFAULT'])
+
+        if cliente in regras_clientes:
+            regras_finais.update(regras_clientes[cliente])
+
+        return regras_finais
+
     # =========================
     # NORMALIZAÇÃO EM COLUNAS COM ASTERISCO
     # PARA INICIAR O MATCH EVITANDO POSSÍVEIS INTERFERENCIAS
     # =========================
 
-    colunas_validacao = list(regras.keys())
+    colunas_validacao = list(regras_padrao.keys())
 
     df_planilha[colunas_validacao] = (
         df_planilha[colunas_validacao]
@@ -106,24 +129,35 @@ def executar_matching(df_planilha, df_sql):
 
         idx_match = idx[chaves_linha.isin(chaves_validas)]
 
-        df_planilha.loc[idx_match, 'teve_match'] = True
-
         # marca que essa linha encontrou sua chave definitiva
         df_planilha.loc[idx_match, 'teve_match'] = True
 
         # agora preenche TODAS as colunas de uma vez
-        for col_dest, col_origem in regras.items():
 
-            valores = df_planilha.loc[idx_match, nome_chave].map(mapa[col_origem])
+        for idx_linha in idx_match:
 
-            df_planilha.loc[idx_match, col_dest] = valores
+            cliente = df_planilha.at[idx_linha, 'Nome da Empresa']
+
+            regra_final = regras_finais(cliente, regras_padrao, regras_clientes)
+
+            chave_valor = df_planilha.at[idx_linha, nome_chave]
+
+            if chave_valor not in mapa.index:
+                continue
+            
+            for col_dest, col_origem in regra_final.items():
+            
+                if col_origem not in mapa.columns:
+                    continue
+                
+                df_planilha.at[idx_linha, col_dest] = mapa.at[chave_valor, col_origem]
 
 
     # =========================
     # CRIA STATUS PARA VALIDAR CASOS TRATADOS
     # =========================
 
-    colunas_validacao = list(regras.keys())
+    colunas_validacao = list(regras_padrao.keys())
 
     df_planilha[colunas_validacao] = (df_planilha[colunas_validacao].replace(r'^\s+$', '', regex=True).fillna(''))
 

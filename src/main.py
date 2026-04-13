@@ -5,6 +5,7 @@
 
 from src.extract.database import carregar_sql
 from src.extract.pendencias import carregar_planilha
+from src.extract.pendencias import df_depara
 from src.extract.base_email import carregar_base_email
 from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
@@ -83,7 +84,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         atualizar_status("Executando conciliação...", 75)
         time.sleep(1.5)
-        df_final, df_nao_localizados = executar_matching(df_planilha, df_sql)
+        df_final, df_nao_localizados = executar_matching(df_planilha, df_sql, df_depara)
         dias_para_corte = df_nao_localizados['Dias Restantes'].min()
 
         if controle["cancelar"]:

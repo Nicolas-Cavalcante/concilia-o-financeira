@@ -31,9 +31,21 @@ input_path = None
 
 if not input_path:
     pasta = Path(r"C:\Users\nicolas.cavalcante\OneDrive - BEFLY TRAVEL\Documentos\GitHub\projeto-conciliacao_ebta\inputs")
-    arquivos = list(pasta.glob("*.xlsx"))
+    arquivos = list(pasta.glob("*De_Para_campos_gerenciais_EBTA*.xlsx"))
 
     if not arquivos:
         raise ValueError("Nenhum arquivo .xslx encontrado na pasta inputs")
 
     input_path = max(arquivos, key=lambda f: f.stat().st_mtime)
+
+df_depara = pd.read_excel(input_path)
+print(df_depara.columns.tolist())
+
+## adicionar posteriormente para evitar quebra silenciosa
+
+#colunas_esperadas = {'Cliente', 'Campo Arquivo do Cliente', 'Nome do Campo'}
+
+#faltando = colunas_esperadas - set(df_depara.columns)
+
+#if faltando:
+#    raise ValueError(f"De-para inválido. Faltando: {faltando}")
