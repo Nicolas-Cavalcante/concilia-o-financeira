@@ -43,8 +43,8 @@ def carregar_sql():
             SO.nr_cartao_mascarado,
             SO.dt_movimento,
             SO.vl_online_cliente,
-            concat(SO.nr_autorizacao_cartao, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
-            concat(SO.nr_autorizacao_cartao, SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Cartão + Data + Valor],
+            concat(SO.AUTORIZACAOCARTAOAMEX, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
+            concat(SO.AUTORIZACAOCARTAOAMEX, SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Cartão + Data + Valor],
             concat(SO.loc_reserva, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Loc Cia + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Data + Valor + Loc Cia],
@@ -60,7 +60,9 @@ def carregar_sql():
             SO.dsc_rota AS Trecho,
             SO.INFDIVISAO AS Departamento,
             SO.nr_autorizacao_cartao,
-            SO.AUTORIZACAOCARTAOAMEX
+            SO.AUTORIZACAOCARTAOAMEX,
+            SO.INFPOLITICA,
+            SO.CONVIDADO
         FROM
         (SELECT 
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
@@ -77,7 +79,9 @@ def carregar_sql():
             DR.dsc_rota,
             INFDIVISAO,
             nr_autorizacao_cartao,
-            AUTORIZACAOCARTAOAMEX
+            AUTORIZACAOCARTAOAMEX,
+            INFPOLITICA,
+            CONVIDADO
         FROM fato_aereo FT
             LEFT JOIN dim_passageiro DP ON FT.id_passageiro = DP.id_passageiro 
             LEFT JOIN dim_contato_solicitante DS ON FT.id_solicitante = DS.id_solicitante
