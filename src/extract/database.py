@@ -49,6 +49,7 @@ def carregar_sql():
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Data + Valor + Loc Cia],
             concat(SO.nr_cartao_mascarado, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Valor + Loc Cia],
+            concat(SO.nr_cartao_mascarado, SO.vl_online_cliente) AS [Chave Cartão + Valor],
             SO.loc_reserva AS Localizador,
             SO.INFOS AS OS,
             SO.id_nro_bilhete AS Bilhete,
@@ -62,7 +63,8 @@ def carregar_sql():
             SO.nr_autorizacao_cartao,
             SO.AUTORIZACAOCARTAOAMEX,
             SO.INFPOLITICA,
-            SO.CONVIDADO
+            SO.CONVIDADO,
+            SO.nm_emissor AS Emissor
         FROM
         (SELECT 
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
@@ -81,12 +83,14 @@ def carregar_sql():
             nr_autorizacao_cartao,
             AUTORIZACAOCARTAOAMEX,
             INFPOLITICA,
-            CONVIDADO
-        FROM fato_aereo FT
-            LEFT JOIN dim_passageiro DP ON FT.id_passageiro = DP.id_passageiro 
-            LEFT JOIN dim_contato_solicitante DS ON FT.id_solicitante = DS.id_solicitante
-            LEFT JOIN dim_rota DR ON FT.id_rota = DR.id_rota  
-            WHERE id_divisao = 2000 
+            CONVIDADO,
+            EM.nm_emissor
+        FROM fato_aereo FA
+            LEFT JOIN dim_passageiro DP ON FA.id_passageiro = DP.id_passageiro 
+            LEFT JOIN dim_contato_solicitante DS ON FA.id_solicitante = DS.id_solicitante
+            LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
+            LEFT JOIN dim_emissor EM ON FA.id_emissor = EM.id_emissor
+            WHERE FA.id_divisao = 2000 
             AND nr_cartao_mascarado is not null
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO

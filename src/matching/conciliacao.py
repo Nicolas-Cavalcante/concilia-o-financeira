@@ -38,6 +38,11 @@ def executar_matching(df_planilha, df_sql, df_depara):
     unicos_plan_k6 = df_planilha['Chave Cartão + Valor + Loc Cia'][~df_planilha['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
     chaves_validas_k6 = set(unicos_sql_k6).intersection(set(unicos_plan_k6))
 
+    # Chave KEY 7 🗝️
+    unicos_sql_k7 = df_sql['Chave Cartão + Valor'][~df_sql['Chave Cartão + Valor'].duplicated(keep=False)]
+    unicos_plan_k7 = df_planilha['Chave Cartão + Valor'][~df_planilha['Chave Cartão + Valor'].duplicated(keep=False)]
+    chaves_validas_k7 = set(unicos_sql_k7).intersection(set(unicos_plan_k7))
+
     # =========================
     # 📍CRIA MAPAS ARMAZENANDO AS CHAVES VALIDAS
     # =========================
@@ -48,9 +53,11 @@ def executar_matching(df_planilha, df_sql, df_depara):
     map_k4 = df_sql[df_sql['Chave Cartão + Data + Valor'].isin(chaves_validas_k4)].set_index('Chave Cartão + Data + Valor')
     map_k5 = df_sql[df_sql['Chave Cartão + Data + Valor + Loc Cia'].isin(chaves_validas_k5)].set_index('Chave Cartão + Data + Valor + Loc Cia')
     map_k6 = df_sql[df_sql['Chave Cartão + Valor + Loc Cia'].isin(chaves_validas_k6)].set_index('Chave Cartão + Valor + Loc Cia')
-    
+    map_k7 = df_sql[df_sql['Chave Cartão + Valor'].isin(chaves_validas_k7)].set_index('Chave Cartão + Valor')
+
     # =========================
-    # 📝 REGRAS, AS COLUNAS SERÃO O PARAMETRO DE PREENHCIMENTO, COLUNAS A ESQUERDA SÃO AS COLUNAS QUE VEM DE df_planilha
+    # 📝 REGRAS, AS COLUNAS SERÃO O PARAMETRO DE PREENHCIMENTO, COLUNAS A ESQUERDA SÃO AS COLUNAS QUE VEM DE df_planilha,
+    # após os dois pontos são os dados que serão buscados no df_sql
     # =========================
 
     regras_padrao = {
@@ -63,7 +70,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
         'Requisição': 'OS',
         'Solicitante': 'Nome do Solicitante',
         'Aprovador': 'Aprovador',
-        'Localizador': 'Localizador'
+        'Localizador': 'Localizador',
+        'Emissor': 'Emissor'
     }
 
 
@@ -97,6 +105,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
 
     colunas_validacao = list(regras_padrao.keys())
 
+    mask_original_columns = df_planilha[colunas_validacao] == '**********'
+
     df_planilha[colunas_validacao] = (
         df_planilha[colunas_validacao]
         .replace('**********', '')
@@ -111,6 +121,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
         ('Chave Cartão + Data + Valor', map_k4, chaves_validas_k4),
         ('Chave Cartão + Data + Valor + Loc Cia', map_k5, chaves_validas_k5),
         ('Chave Cartão + Valor + Loc Cia', map_k6, chaves_validas_k6),
+        ('Chave Cartão + Valor', map_k7, chaves_validas_k7),
     ]
 
     # =========================
@@ -169,20 +180,23 @@ def executar_matching(df_planilha, df_sql, df_depara):
     df_planilha.loc[df_planilha['teve_match'] == False, 'status'] = 'Não Localizado'
 
     # 2.Encontrou a chave, mas ficou com coluna incompleta
-    df_planilha.loc[
-        (df_planilha['teve_match'] == True) & tem_vazio,
-        'status'
-    ] = 'Colunas com ausência de dados'
+    #df_planilha.loc[
+    #    (df_planilha['teve_match'] == True) & mask_original_columns,
+    #    'status'
+    #] = 'Colunas com ausência de dados'
 
-    # 3.Devolve asterisco para colunas com dados incompletos
-    df_planilha.loc[
-        df_planilha['status'] == 'Colunas com ausência de dados',
-        colunas_validacao
-    ] = df_planilha.loc[
-        df_planilha['status'] == 'Colunas com ausência de dados',
-        colunas_validacao
-    ].replace('', '**********')
+    # 3.Preenche com asterisco onde já existia
+    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].mask(
+        (df_planilha[colunas_validacao] == '') & mask_original_columns,
+        '**********'
+    )
 
+    mask_asterisco = (df_planilha[colunas_validacao] == '**********')
+    tem_asterisco = mask_asterisco.any(axis=1)
+    df_planilha.loc[
+    (df_planilha['teve_match'] == True) & tem_asterisco,
+    'status'
+] = 'Colunas com ausência de dados'
 
     # =========================
     # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
