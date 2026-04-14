@@ -39,7 +39,9 @@ if not input_path:
     input_path = max(arquivos, key=lambda f: f.stat().st_mtime)
 
 df_depara = pd.read_excel(input_path)
-print(df_depara.columns.tolist())
+
+
+
 
 ## adicionar posteriormente para evitar quebra silenciosa
 

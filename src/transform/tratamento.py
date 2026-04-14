@@ -16,9 +16,13 @@ def tratar_dados(df):
     mask_cia = df['Cia Aérea'].isin(['127', '577', '957'])
     mask_ticket = df['Ticket'].str.contains(r'^(?=.*[A-Z])(?=.*\d)[A-Z0-9]+$', regex=True)
 
+    df['Ticket'] = df['Ticket'].fillna('')
+
     df['RLOC_CIA_CORRETO'] = ''
     df.loc[mask_cia, 'RLOC_CIA_CORRETO'] = df.loc[mask_cia, 'RLOC_CIA_TRATADO']
     df.loc[~mask_cia & mask_ticket, 'RLOC_CIA_CORRETO'] = df.loc[~mask_cia & mask_ticket, 'Ticket']
+
+    df['RLOC_CIA_CORRETO'] = df['RLOC_CIA_CORRETO'].fillna('')
 
     df['Valor Total'] = df['Valor Total'].apply(
         lambda x: f"{x:.2f}" if pd.notnull(x) else x
@@ -68,12 +72,20 @@ def tratar_dados(df):
         df['RLOC_CIA_CORRETO'].astype(str)
     )
 
+    # Cria chave Cartão + Valor
+    df['Chave Cartão + Valor'] = (
+        df['Cartão'].astype(str).str[-3:] +
+        df['Valor Total']
+    )
+
     #Cria coluna data de fechamento
     data_execucao = pd.Timestamp.today().normalize()
     hoje = pd.Timestamp.today().normalize()
 
     df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
     df['Dias Restantes'] = (df['Data Fechamento Cartão'] - hoje).dt.days
+
+    df['Emissor'] = ''
 
 
     return df
