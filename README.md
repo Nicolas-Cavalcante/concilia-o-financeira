@@ -26,13 +26,13 @@ O projeto segue uma arquitetura modular para facilitar manutenção, escalabilid
 
 •	src/interface: Interface gráfica em Tkinter.
 
-Em mapeamento de campos por cliente temos um cuidado maior de verificação, a mascara de colunas criada no arquivo vai corresponder onde cada informação está no banco. Temos clientes por exemplo que a informação do “centro de custo” fica na coluna de “infpolitica” no banco, para esses casos precisamos identificar qual a coluna correspondente para cada cliente.
+Em mapeamento de campos por cliente temos um cuidado maior de verificação, a mascara de colunas criada no arquivo vai corresponder onde cada informação está no banco. Temos clientes por exemplo que a informação do “centro de custo” fica na coluna de “infpolitica” no banco, para esses casos precisamos identificar qual a coluna correspondente para cada cliente. Toda informação que temos sobre as colunas estão alocadas no "depara" disponibilizado pelo time de conciliação.
 
 # 3. Fluxo de Dados
 
 O processamento segue as seguintes etapas:
 
-•	Entrada de arquivos via interface (pendências e base de clientes).
+•	Entrada de arquivos (pendências, base de e-mails e depara).
 
 •	Consulta SQL com dados dos últimos 2 meses.
 
@@ -42,25 +42,23 @@ O processamento segue as seguintes etapas:
 
 •	Geração de outputs (conciliados e pendentes).
 
-•	Envio automático de notificações por e-mail.
+•	Envio de notificações por e-mail por escolha do usuário.
 
 Chaves de Matching:
 
-•	K1: Autorização
+•	K1: Autorização + Data emissão + Valor
 
-•	K2: Autorização + Data + Valor
+•	K2: Autorização + 3 dígitos finais do cartão + Data emissão + Valor
 
-•	K3: Autorização + Cartão + Data + Valor
+•	K3: Loc Cia + Data emissão + Valor
 
-•	K4: Cartão + Data + Valor
+•	K4: 3 dígitos finais do cartão + Data emissão + Valor + Loc Cia
 
-•	K5: Cartão + Data + Valor + Localizador
-
-•	K6: Cartão + Valor + Localizador
+•	K5: 3 dígitos finais do cartão + Data emissão + Localizador
 
 # 4. Regras de Negócio
 
-Casos não conciliados são enviados para ajuste operacional via e-mail. As correções devem ser realizadas no sistema de origem (benner), assim no próximo processamento este caso não subirá como pendência.
+Casos não conciliados e com informações ausentes são enviados para ajuste operacional via e-mail. As correções devem ser realizadas no sistema de origem (benner), assim no próximo processamento este caso não subirá como pendência.
 
 Caso os ajustes não sejam feitos dentro da data de corte do cliente, a fatura será fechada e os casos subirão em branco.
 
@@ -72,7 +70,7 @@ Aging (Dias)	Status	Prioridade	Ação
 
 < 0	Crítico	Alta	Envio + Diretoria
 
-= 0	Urgente	Alta	Envio imediato
+= 0	Urgente	Alta	Envio + Operação
 
 1 a 5	Alta	Média	Envio operação
 
@@ -81,14 +79,17 @@ Aging (Dias)	Status	Prioridade	Ação
 > 10	Baixa	Rotina normal
 
 # 5. Dependências Principais
+Arquivo requirements contempla todas as dependências utilizadas.
 
 •	Pandas & Openpyxl: Manipulação de dados.
+
+•	python-dotenv: Busca de dados no .env.
 
 •	SQLAlchemy & pyodbc: Conexão com SQL Server.
 
 •	Pywin32: Integração com Outlook.
 
-•	Tkinter: Interface gráfica.
+•	CustomTkinter: Interface gráfica.
 
 Variáveis de Ambiente (.env)
 
