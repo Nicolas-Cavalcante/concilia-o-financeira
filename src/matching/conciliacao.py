@@ -114,6 +114,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
         .fillna('')
     )
 
+    
+
     chaves = [
         ('Chave Aut + Data + Valor', map_k1, chaves_validas_k1),
         ('Chave Aut + Cartão + Data + Valor', map_k2, chaves_validas_k2),
