@@ -28,7 +28,7 @@ def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_correto
     df_planilha= path / "df_planilha.xlsx"
     
     # 3. Aplica a formatação visual
-    aplicar_estilo_visual([df_nao_localizados_caminho])
+    aplicar_estilo_visual([df_nao_localizados_caminho, df_planilha])
 
 
 #==============================================

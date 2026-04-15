@@ -35,29 +35,21 @@ def tratar_dados(df):
         df['Valor Total']
     )
 
-    # Cria Chave Aut + Final Cartão + Data + Valor como KEY 2
-    df['Chave Aut + Cartão + Data + Valor'] = (
-        df['Autorização'].astype(str) +
-        df['Cartão'].astype(str).str[-3:] +
-        df['Data de Emissão'].astype(str) +
-        df['Valor Total']
-    )
-
-    # Cria chave Cartão + Data + Valor como KEY 3
+    # Cria chave Cartão + Data + Valor como KEY 2
     df['Chave Loc Cia + Data + Valor'] = (
         df['RLOC_CIA_CORRETO'].astype(str) +
         df['Data de Emissão'].astype(str) +
         df['Valor Total']
     )
 
-    # Cria chave Cartão + Data + Valor como KEY 4
+    # Cria chave Cartão + Data + Valor como KEY 3
     df['Chave Cartão + Data + Valor'] = (
         df['Cartão'].astype(str).str[-3:] +
         df['Data de Emissão'].astype(str) +
         df['Valor Total']
     )
 
-    # Cria chave Cartão + Data + Valor + loc Cia como KEY 5
+    # Cria chave Cartão + Data + Valor + loc Cia como KEY 4
     df['Chave Cartão + Data + Valor + Loc Cia'] = (
         df['Cartão'].astype(str).str[-3:] +
         df['Data de Emissão'].astype(str) +
@@ -65,17 +57,11 @@ def tratar_dados(df):
         df['RLOC_CIA_CORRETO'].astype(str)
     )
 
-    # Cria chave Cartão + Valor + Loc Cia como KEY 6
+    # Cria chave Cartão + Valor + Loc Cia como KEY 5
     df['Chave Cartão + Valor + Loc Cia'] = (
         df['Cartão'].astype(str).str[-3:] +
         df['Valor Total'] +
         df['RLOC_CIA_CORRETO'].astype(str)
-    )
-
-    # Cria chave Cartão + Valor
-    df['Chave Cartão + Valor'] = (
-        df['Cartão'].astype(str).str[-3:] +
-        df['Valor Total']
     )
 
     #Cria coluna data de fechamento

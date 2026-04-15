@@ -13,47 +13,41 @@ def executar_matching(df_planilha, df_sql, df_depara):
     unicos_plan_k1 = df_planilha['Chave Aut + Data + Valor'][~df_planilha['Chave Aut + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k1 = set(unicos_sql_k1).intersection(set(unicos_plan_k1))
 
-    # Chave KEY 2 🗝️
-    unicos_sql_k2 = df_sql['Chave Aut + Cartão + Data + Valor'][~df_sql['Chave Aut + Cartão + Data + Valor'].duplicated(keep=False)]
-    unicos_plan_k2 = df_planilha['Chave Aut + Cartão + Data + Valor'][~df_planilha['Chave Aut + Cartão + Data + Valor'].duplicated(keep=False)]
+    # Chave KEY 3 🗝️
+    unicos_sql_k2 = df_sql['Chave Loc Cia + Data + Valor'][~df_sql['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
+    unicos_plan_k2 = df_planilha['Chave Loc Cia + Data + Valor'][~df_planilha['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k2 = set(unicos_sql_k2).intersection(set(unicos_plan_k2))
 
-    # Chave KEY 3 🗝️
-    unicos_sql_k3 = df_sql['Chave Loc Cia + Data + Valor'][~df_sql['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
-    unicos_plan_k3 = df_planilha['Chave Loc Cia + Data + Valor'][~df_planilha['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
+    # Chave KEY 4 🗝️
+    unicos_sql_k3 = df_sql['Chave Cartão + Data + Valor'][~df_sql['Chave Cartão + Data + Valor'].duplicated(keep=False)]
+    unicos_plan_k3 = df_planilha['Chave Cartão + Data + Valor'][~df_planilha['Chave Cartão + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k3 = set(unicos_sql_k3).intersection(set(unicos_plan_k3))
 
-    # Chave KEY 4 🗝️
-    unicos_sql_k4 = df_sql['Chave Cartão + Data + Valor'][~df_sql['Chave Cartão + Data + Valor'].duplicated(keep=False)]
-    unicos_plan_k4 = df_planilha['Chave Cartão + Data + Valor'][~df_planilha['Chave Cartão + Data + Valor'].duplicated(keep=False)]
+    # Chave KEY 5 🗝️
+    unicos_sql_k4 = df_sql['Chave Cartão + Data + Valor + Loc Cia'][~df_sql['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
+    unicos_plan_k4 = df_planilha['Chave Cartão + Data + Valor + Loc Cia'][~df_planilha['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
     chaves_validas_k4 = set(unicos_sql_k4).intersection(set(unicos_plan_k4))
 
-    # Chave KEY 5 🗝️
-    unicos_sql_k5 = df_sql['Chave Cartão + Data + Valor + Loc Cia'][~df_sql['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
-    unicos_plan_k5 = df_planilha['Chave Cartão + Data + Valor + Loc Cia'][~df_planilha['Chave Cartão + Data + Valor + Loc Cia'].duplicated(keep=False)]
+    # Chave KEY 6 🗝️
+    unicos_sql_k5 = df_sql['Chave Cartão + Valor + Loc Cia'][~df_sql['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
+    unicos_plan_k5 = df_planilha['Chave Cartão + Valor + Loc Cia'][~df_planilha['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
     chaves_validas_k5 = set(unicos_sql_k5).intersection(set(unicos_plan_k5))
 
-    # Chave KEY 6 🗝️
-    unicos_sql_k6 = df_sql['Chave Cartão + Valor + Loc Cia'][~df_sql['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
-    unicos_plan_k6 = df_planilha['Chave Cartão + Valor + Loc Cia'][~df_planilha['Chave Cartão + Valor + Loc Cia'].duplicated(keep=False)]
-    chaves_validas_k6 = set(unicos_sql_k6).intersection(set(unicos_plan_k6))
-
     # Chave KEY 7 🗝️
-    unicos_sql_k7 = df_sql['Chave Cartão + Valor'][~df_sql['Chave Cartão + Valor'].duplicated(keep=False)]
-    unicos_plan_k7 = df_planilha['Chave Cartão + Valor'][~df_planilha['Chave Cartão + Valor'].duplicated(keep=False)]
-    chaves_validas_k7 = set(unicos_sql_k7).intersection(set(unicos_plan_k7))
+    #unicos_sql_k7 = df_sql['Chave Cartão + Valor'][~df_sql['Chave Cartão + Valor'].duplicated(keep=False)]
+    #unicos_plan_k7 = df_planilha['Chave Cartão + Valor'][~df_planilha['Chave Cartão + Valor'].duplicated(keep=False)]
+    #chaves_validas_k7 = set(unicos_sql_k7).intersection(set(unicos_plan_k7))
 
     # =========================
     # 📍CRIA MAPAS ARMAZENANDO AS CHAVES VALIDAS
     # =========================
 
     map_k1 = df_sql[df_sql['Chave Aut + Data + Valor'].isin(chaves_validas_k1)].set_index('Chave Aut + Data + Valor')
-    map_k2 = df_sql[df_sql['Chave Aut + Cartão + Data + Valor'].isin(chaves_validas_k2)].set_index('Chave Aut + Cartão + Data + Valor')
-    map_k3 = df_sql[df_sql['Chave Loc Cia + Data + Valor'].isin(chaves_validas_k3)].set_index('Chave Loc Cia + Data + Valor')
-    map_k4 = df_sql[df_sql['Chave Cartão + Data + Valor'].isin(chaves_validas_k4)].set_index('Chave Cartão + Data + Valor')
-    map_k5 = df_sql[df_sql['Chave Cartão + Data + Valor + Loc Cia'].isin(chaves_validas_k5)].set_index('Chave Cartão + Data + Valor + Loc Cia')
-    map_k6 = df_sql[df_sql['Chave Cartão + Valor + Loc Cia'].isin(chaves_validas_k6)].set_index('Chave Cartão + Valor + Loc Cia')
-    map_k7 = df_sql[df_sql['Chave Cartão + Valor'].isin(chaves_validas_k7)].set_index('Chave Cartão + Valor')
+    map_k2 = df_sql[df_sql['Chave Loc Cia + Data + Valor'].isin(chaves_validas_k2)].set_index('Chave Loc Cia + Data + Valor')
+    map_k3 = df_sql[df_sql['Chave Cartão + Data + Valor'].isin(chaves_validas_k3)].set_index('Chave Cartão + Data + Valor')
+    map_k4 = df_sql[df_sql['Chave Cartão + Data + Valor + Loc Cia'].isin(chaves_validas_k4)].set_index('Chave Cartão + Data + Valor + Loc Cia')
+    map_k5 = df_sql[df_sql['Chave Cartão + Valor + Loc Cia'].isin(chaves_validas_k5)].set_index('Chave Cartão + Valor + Loc Cia')
+    #map_k7 = df_sql[df_sql['Chave Cartão + Valor'].isin(chaves_validas_k7)].set_index('Chave Cartão + Valor')
 
     # =========================
     # 📝 REGRAS, AS COLUNAS SERÃO O PARAMETRO DE PREENHCIMENTO, COLUNAS A ESQUERDA SÃO AS COLUNAS QUE VEM DE df_planilha,
@@ -118,12 +112,11 @@ def executar_matching(df_planilha, df_sql, df_depara):
 
     chaves = [
         ('Chave Aut + Data + Valor', map_k1, chaves_validas_k1),
-        ('Chave Aut + Cartão + Data + Valor', map_k2, chaves_validas_k2),
-        ('Chave Loc Cia + Data + Valor', map_k3, chaves_validas_k3),
-        ('Chave Cartão + Data + Valor', map_k4, chaves_validas_k4),
-        ('Chave Cartão + Data + Valor + Loc Cia', map_k5, chaves_validas_k5),
-        ('Chave Cartão + Valor + Loc Cia', map_k6, chaves_validas_k6),
-        ('Chave Cartão + Valor', map_k7, chaves_validas_k7),
+        ('Chave Loc Cia + Data + Valor', map_k2, chaves_validas_k2),
+        ('Chave Cartão + Data + Valor', map_k3, chaves_validas_k3),
+        ('Chave Cartão + Data + Valor + Loc Cia', map_k4, chaves_validas_k4),
+        ('Chave Cartão + Valor + Loc Cia', map_k5, chaves_validas_k5),
+        #('Chave Cartão + Valor', map_k7, chaves_validas_k7),
     ]
 
     # =========================
@@ -131,6 +124,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
     # =========================
 
     df_planilha['teve_match'] = False
+    df_planilha['chave_match'] = None
 
     for nome_chave, mapa, chaves_validas in chaves:
 
@@ -144,6 +138,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
 
         # marca que essa linha encontrou sua chave definitiva
         df_planilha.loc[idx_match, 'teve_match'] = True
+        df_planilha.loc[idx_match, 'chave_match'] = nome_chave
 
         # agora preenche TODAS as colunas de uma vez
 
@@ -173,8 +168,6 @@ def executar_matching(df_planilha, df_sql, df_depara):
     colunas_validacao = list(regras_padrao.keys())
 
     df_planilha[colunas_validacao] = (df_planilha[colunas_validacao].replace(r'^\s+$', '', regex=True).fillna(''))
-
-    tem_vazio = (df_planilha[colunas_validacao] == '').any(axis=1)
     
     df_planilha['status'] = 'Ok'
 

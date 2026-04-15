@@ -43,13 +43,11 @@ def carregar_sql():
             SO.nr_cartao_mascarado,
             SO.dt_movimento,
             SO.vl_online_cliente,
-            concat(SO.AUTORIZACAOCARTAOAMEX, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
-            concat(SO.AUTORIZACAOCARTAOAMEX, SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Cartão + Data + Valor],
+            concat(SO.nr_autorizacao_cartao, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
             concat(SO.loc_reserva, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Loc Cia + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Data + Valor + Loc Cia],
             concat(SO.nr_cartao_mascarado, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Valor + Loc Cia],
-            concat(SO.nr_cartao_mascarado, SO.vl_online_cliente) AS [Chave Cartão + Valor],
             SO.loc_reserva AS Localizador,
             SO.INFOS AS OS,
             SO.id_nro_bilhete AS Bilhete,
@@ -69,7 +67,11 @@ def carregar_sql():
         (SELECT 
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
             FORMAT(dt_movimento, 'yyyy-MM-dd') AS dt_movimento, 
-            CAST(vl_online_cliente + ISNULL(vl_taxa_embarque,0) AS DECIMAL(18,2)) AS vl_online_cliente,
+            CAST(
+                ISNULL(vl_online_cliente, 0) 
+                + ISNULL(vl_taxa_embarque, 0) 
+                + (ISNULL(vl_tx_du, 0) / 10000.0)
+            AS DECIMAL(18,2)) AS vl_online_cliente,
             loc_reserva,
             INFOS,
             CAST(id_nro_bilhete AS VARCHAR(50)) AS id_nro_bilhete,
