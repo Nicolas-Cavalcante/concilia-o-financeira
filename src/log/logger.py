@@ -1,7 +1,5 @@
 import pandas as pd
 import os
-from datetime import datetime
-
 
 ## Define colunas que sairão no arquivo histórico_execucao na pasta logs
 COLUNAS_LOG = [
@@ -16,6 +14,9 @@ COLUNAS_LOG = [
     #"dias_para_corte"
 ]
 
+#==============================================
+# 📌 Carrega LOG de Excução detalhado (executa sempre)
+#==============================================
 
 def registrar_execucao(path, dados):
 
@@ -34,3 +35,85 @@ def registrar_execucao(path, dados):
     df = pd.concat([df, novo], ignore_index=True)
 
     df.to_excel(path, index=False)
+
+#==============================================
+# 📌 Carrega LOG de Excução detalhado (executa sempre)
+#==============================================
+
+def registra_execucao_detalhada(path, df_log):
+
+    # Garante que a pasta exista
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    # =========================
+    # CARREGA HISTÓRICO
+    # =========================
+    if os.path.exists(path):
+        try:
+            df_hist = pd.read_excel(path)
+        except:
+            df_hist = pd.DataFrame(columns=df_log.columns)
+    else:
+        df_hist = pd.DataFrame(columns=df_log.columns)
+
+    # =========================
+    # ENCONTRA PRIMEIRA OCORRÊNCIA
+    # =========================
+    if not df_hist.empty:
+        df_primeira = (
+            df_hist.groupby('chave_registro')['data_execucao']
+            .min()
+            .reset_index()
+            .rename(columns={'data_execucao': 'data_primeira_ocorrencia'})
+        )
+
+        df_log = df_log.merge(
+            df_primeira,
+            on='chave_registro',
+            how='left'
+        )
+    else:
+        df_log['data_primeira_ocorrencia'] = pd.NaT
+
+    # =========================
+    # DEFINE PRIMEIRA OCORRÊNCIA
+    # =========================
+    df_log['data_primeira_ocorrencia'] = df_log['data_primeira_ocorrencia'].fillna(df_log['data_execucao'])
+
+
+    # =========================
+    # CALCULA AGING
+    # =========================
+    df_log['dias_em_aberto'] = (
+        df_log['data_execucao'] - df_log['data_primeira_ocorrencia']
+    ).dt.days
+
+    # =========================
+    # SALVA HISTÓRICO (APPEND)
+    # =========================
+    df_final = pd.concat([df_hist, df_log], ignore_index=True)
+
+    df_final.to_excel(path, index=False)
+
+
+
+#==============================================
+# 📌 Carrega LOG de Excução detalhado (executa sempre)
+#==============================================
+
+
+def registra_execucao_cliente(path, df_log_cliente):
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    if os.path.exists(path):
+        try:
+            df_hist = pd.read_excel(path)
+        except:
+            df_hist = pd.DataFrame(columns=df_log_cliente.columns)
+    else:
+        df_hist = pd.DataFrame(columns=df_log_cliente.columns)
+
+    df_final = pd.concat([df_hist, df_log_cliente], ignore_index=True)
+
+    df_final.to_excel(path, index=False)
