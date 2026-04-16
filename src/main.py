@@ -14,7 +14,11 @@ from src.notify.analises_email import (
     montar_corpo_diretoria,
     montar_corpo_email
 )
-from src.log.logger import registrar_execucao
+from src.log.logger import (
+    registrar_execucao,
+    registra_execucao_detalhada,
+    registra_execucao_cliente
+)
 from src.notify.regra_envio import definir_destinatarios
 from src.notify.email import enviar_email
 
@@ -214,23 +218,78 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         raise e #Não permite que a informação apresentada no erro quebre
     
     #==============================================
-    # 📌 Carrega LOG de Excução (executa sempre)
+    # 📌 Carrega LOG de Excução detalhado com chave unica
     #==============================================
+    df_log = df_planilha.copy() 
+
+    df_log['id_execucao'] = id_execucao
+    df_log['data_execucao'] = data_execucao
+    df_log['cliente'] = df_log['Nome da Empresa']
+    df_log['email_enviado'] = "Sim" if status_execucao == "Sucesso" else "Não"
+    
+    df_log = df_log [
+        [
+            "id_execucao",
+            "data_execucao",
+            "cliente",
+            "chave_registro",
+            "status",
+            "email_enviado"
+        ]
+    ]
+
+    #==============================================
+    # 📌 Carrega log por cliente agrupado
+    #==============================================
+
+    df_log_cliente = (
+        df_planilha
+        .groupby('Nome da Empresa')
+        .agg(
+            qtd_total=('Nome da Empresa', 'count'),
+            qtd_corretos=('status', lambda x: (x == 'Ok').sum()),
+            qtd_nao_localizados=('status', lambda x: ( x == 'Não Localizado').sum())
+        )
+        .reset_index()
+    )
+
+    df_log_cliente = df_log_cliente.rename(columns={
+        "Nome da Empresa": "cliente"
+    })
+
+    df_log_cliente['id_execucao'] = id_execucao
+    df_log_cliente['data_execucao'] = data_execucao
+    df_log_cliente['email_enviado'] = "Sim" if status_execucao == "Sucesso" else "Não"
+
+    df_log_cliente = df_log_cliente[
+        [
+            "id_execucao",
+            "data_execucao",
+            "cliente",
+            "email_enviado",
+            "qtd_total",
+            "qtd_corretos",
+            "qtd_nao_localizados"
+        ]
+    ]
+
+    #==============================================
+    # 📌 Carrega log de execução
+    #==============================================
+
     dados_log = {
         "id_execucao": id_execucao,
         "data_execucao": data_execucao,
-
-        "qtd_total": len(df_planilha) if 'df_planilha' in locals() else 0,
-        "qtd_corretos": len(df_final[df_final['status'] == 'Ok']) if isinstance(df_final, pd.DataFrame) else 0,
-        "qtd_nao_localizados": ( 
-            len(df_nao_localizados[df_nao_localizados['status'] == 'Não Localizado'])
-            if isinstance(df_nao_localizados, pd.DataFrame)
-            else 0
-        ),
-
-        "status_execucao": status_execucao,
+        "qtd_total":len(df_planilha),
+        "qtd_correto": (df_planilha['status'] == 'Ok').sum(),
+        "qtd_nao_localizado":(df_planilha['status'] == 'Não Localizado').sum(),
+        "status_execucao":status_execucao,
         "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
     }
+
+    registra_execucao_detalhada(config.LOG_DETALHE_PATH, df_log)
+
+    registra_execucao_cliente(config.LOG_CLIENTE_PATH, df_log_cliente)
 
     registrar_execucao(config.LOG_PATH, dados_log)
 
