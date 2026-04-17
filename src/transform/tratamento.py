@@ -29,11 +29,11 @@ def tratar_dados(df):
         lambda x: f"{x:.2f}" if pd.notnull(x) else x
     )
 
-    df['sigla_grupo'] = df.merge(
-        df_depara,
-        on='Nome da Empresa',
-        how='left'
-    )
+    #df['sigla_grupo'] = df.merge(
+    #    df_depara,
+    #    on='Nome da Empresa',
+    #    how='left'
+    #)
 
     # Cria Chave Aut + Data + Valor como KEY 1
     df['Chave Aut + Data + Valor'] = (
@@ -69,12 +69,6 @@ def tratar_dados(df):
         df['Cartão'].astype(str).str[-3:] +
         df['Valor Total'] +
         df['RLOC_CIA_CORRETO'].astype(str)
-    )
-
-    df['Chave Sigla + Aut + Valor'] = (
-        df['sigla_grupo'].astype(str) +
-        df['Autorização'].astype(str) + 
-        df['Valor Total']
     )
 
     # Cria Chave de registro para o log_micro
