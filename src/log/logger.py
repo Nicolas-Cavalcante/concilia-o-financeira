@@ -15,10 +15,10 @@ COLUNAS_LOG = [
 ]
 
 #==============================================
-# 📌 Carrega LOG de Excução detalhado (executa sempre)
+# 📌 Carrega LOG de Excução detalhado
 #==============================================
 
-def registrar_execucao(path, dados):
+def registrar_execucao_chaves(path, df_log_chaves):
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -30,14 +30,14 @@ def registrar_execucao(path, dados):
     else:
         df = pd.DataFrame(columns=COLUNAS_LOG)
 
-    novo = pd.DataFrame([dados])
+    novo = pd.DataFrame([df_log_chaves])
 
     df = pd.concat([df, novo], ignore_index=True)
 
     df.to_excel(path, index=False)
 
 #==============================================
-# 📌 Carrega LOG de Excução detalhado (executa sempre)
+# 📌 Carrega LOG de Excução detalha
 #==============================================
 
 def registra_execucao_detalhada(path, df_log):
@@ -92,28 +92,5 @@ def registra_execucao_detalhada(path, df_log):
     # SALVA HISTÓRICO (APPEND)
     # =========================
     df_final = pd.concat([df_hist, df_log], ignore_index=True)
-
-    df_final.to_excel(path, index=False)
-
-
-
-#==============================================
-# 📌 Carrega LOG de Excução detalhado (executa sempre)
-#==============================================
-
-
-def registra_execucao_cliente(path, df_log_cliente):
-
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    if os.path.exists(path):
-        try:
-            df_hist = pd.read_excel(path)
-        except:
-            df_hist = pd.DataFrame(columns=df_log_cliente.columns)
-    else:
-        df_hist = pd.DataFrame(columns=df_log_cliente.columns)
-
-    df_final = pd.concat([df_hist, df_log_cliente], ignore_index=True)
 
     df_final.to_excel(path, index=False)
