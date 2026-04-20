@@ -219,19 +219,26 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     #==============================================
     # 📌 Carrega LOG de Excução detalhado com chave unica
     #==============================================
-    df_log = df_planilha.copy() 
+    df_log = df_planilha.copy()
+
+    # Se a coluna 'chave_match' não existir (caso o matching falhe antes de criar), criamos uma vazia
+    if 'chave_match' not in df_log.columns:
+        df_log['chave_match'] = 'Não Identificado'
 
     df_log['id_execucao'] = id_execucao
     df_log['data_execucao'] = data_execucao
     df_log['celula'] = df_log['Nome da Empresa']
     df_log['cliente'] = df_log['Nome da Empresa']
-    df_log['incorretos'] = (df_log['status'] == 'Não Localizado').sum()
-    df_log['corretos'] = (df_log['status'] == 'Ok').sum()
+    df_log = df_log.groupby('Nome da Empresa').agg(
+        corretos=('status', lambda x: (x == 'Sim').sum()),
+        incorretos=('status', lambda x: (x != 'Sim').sum())
+    ).reset_index()
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
     
     df_log = df_log [
         [
             "data_execucao",
+            "chave_match",
             "celula",
             "cliente",
             "incorretos",
@@ -255,14 +262,13 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         .reset_index()
     )
 
-    # Garantir que as colunas existam mesmo que não haja erros ou acertos
-    if 'Ok' not in df_log_chaves: df_log_chaves['Ok'] = 0
-    if 'Não Localizado' not in df_log_chaves: df_log_chaves['Não Localizado'] = 0
-
+    for col in ['Ok', 'Não Localizado']:
+        if col not in df_log_chaves:
+            df_log_chaves[col] = 0
     df_log_chaves['data_execucao'] = data_execucao
 
     df_log_chaves = df_log_chaves.rename(columns={
-        'chave_utilizada': 'chave',
+        'chave_match': 'chave',
         'Ok': 'qtd_encontrada',
         'Não Localizado': 'qtd_nao_encontrada'
     })

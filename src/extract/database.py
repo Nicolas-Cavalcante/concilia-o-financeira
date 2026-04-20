@@ -42,6 +42,7 @@ def carregar_sql():
         SELECT
             SO.nr_autorizacao_cartao,
             SO.AUTORIZACAOCARTAOAMEX,
+            SO.tipo_pagamento,
             SO.loc_reserva AS Localizador,
             SO.INFOS AS OS,
             SO.id_nro_bilhete AS Bilhete,
@@ -67,6 +68,7 @@ def carregar_sql():
         (SELECT
             nr_autorizacao_cartao,
             AUTORIZACAOCARTAOAMEX,
+            DTP.dsc_tipo_pagto AS tipo_pagamento,
             loc_reserva,
             INFOS,
             CAST(id_nro_bilhete AS VARCHAR(50)) AS id_nro_bilhete,
@@ -92,6 +94,7 @@ def carregar_sql():
             LEFT JOIN dim_contato_solicitante DS ON FA.id_solicitante = DS.id_solicitante
             LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
             LEFT JOIN dim_emissor EM ON FA.id_emissor = EM.id_emissor
+            LEFT JOIN dim_tipo_pagamento DTP ON FA.id_tipo_pagamento = DTP.id_tipo_pagamento
             WHERE FA.id_divisao = 2000 
             AND nr_cartao_mascarado is not null
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
