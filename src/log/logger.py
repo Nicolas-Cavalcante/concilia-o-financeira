@@ -1,19 +1,6 @@
 import pandas as pd
 import os
 
-## Define colunas que sairão no arquivo histórico_execucao na pasta logs
-COLUNAS_LOG = [
-    "id_execucao",
-    "data_execucao",
-    "qtd_total",
-    "qtd_corretos",
-    "qtd_nao_localizados",
-    "status_execucao",
-    "email_enviado"
-    #"tipo_envio",
-    #"dias_para_corte"
-]
-
 #==============================================
 # 📌 Carrega LOG de Excução detalhado
 #==============================================
@@ -24,17 +11,14 @@ def registrar_execucao_chaves(path, df_log_chaves):
 
     if os.path.exists(path):
         try:
-            df = pd.read_excel(path)
+            df_hist = pd.read_excel(path)
+            df_final = pd.concat([df_hist, df_log_chaves], ignore_index=True)
         except:
-            df = pd.DataFrame(columns=COLUNAS_LOG)
+            df_final = df_log_chaves
     else:
-        df = pd.DataFrame(columns=COLUNAS_LOG)
+        df_final = df_log_chaves
 
-    novo = pd.DataFrame([df_log_chaves])
-
-    df = pd.concat([df, novo], ignore_index=True)
-
-    df.to_excel(path, index=False)
+    df_final.to_excel(path, index=False)
 
 #==============================================
 # 📌 Carrega LOG de Excução detalha
@@ -52,16 +36,17 @@ def registra_execucao_detalhada(path, df_log):
         try:
             df_hist = pd.read_excel(path)
         except:
-            df_hist = pd.DataFrame(columns=df_log.columns)
+            df_hist = pd.DataFrame()
     else:
-        df_hist = pd.DataFrame(columns=df_log.columns)
+        df_hist = pd.DataFrame()
 
     # =========================
     # ENCONTRA PRIMEIRA OCORRÊNCIA
     # =========================
+    
     if not df_hist.empty:
         df_primeira = (
-            df_hist.groupby('chave_registro')['data_execucao']
+            df_hist.groupby('chave_match')['data_execucao']
             .min()
             .reset_index()
             .rename(columns={'data_execucao': 'data_primeira_ocorrencia'})
@@ -69,7 +54,7 @@ def registra_execucao_detalhada(path, df_log):
 
         df_log = df_log.merge(
             df_primeira,
-            on='chave_registro',
+            on='chave_match',
             how='left'
         )
     else:
