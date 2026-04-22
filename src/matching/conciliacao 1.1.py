@@ -158,11 +158,38 @@ def executar_matching(df_planilha, df_sql, df_depara):
                 
                 df_planilha.at[idx_linha, col_dest] = mapa.at[chave_valor, col_origem]
 
+
     # =========================
     # CRIA STATUS PARA VALIDAR CASOS TRATADOS
     # =========================
 
-    df_planilha['chave_match'] = df_planilha['chave_match'].fillna('não_match')
+    colunas_validacao = list(regras_padrao.keys())
+
+    df_planilha[colunas_validacao] = (df_planilha[colunas_validacao].replace(r'^\s+$', '', regex=True).fillna(''))
+    
+    df_planilha['dados_completos'] = (
+        df_planilha[colunas_validacao]
+        .ne('')
+        .all(axis=1)
+    )
+
+    df_planilha['status'] = 'Ok'
+
+    # 1.Não encontrou nenhuma chave
+    df_planilha.loc[df_planilha['teve_match'] == False, 'status'] = 'Não Localizado'
+
+    # 3.Preenche com asterisco onde já existia
+    df_planilha[colunas_validacao] = df_planilha[colunas_validacao].mask(
+        (df_planilha[colunas_validacao] == '') & mask_original_columns,
+        '**********'
+    )
+
+    mask_asterisco = (df_planilha[colunas_validacao] == '**********')
+    tem_asterisco = mask_asterisco.any(axis=1)
+    df_planilha.loc[
+    (df_planilha['teve_match'] == True) & tem_asterisco,
+    'status'
+    ] = 'Colunas com ausência de dados'
 
     colunas_validacao = list(regras_padrao.keys())
 
@@ -191,6 +218,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
     (df_planilha['teve_match'] == True) & tem_asterisco,
     'status'
 ] = 'Colunas com ausência de dados'
+
 
     # =========================
     # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS

@@ -16,8 +16,7 @@ OUTPUT_INCORRETOS = OUTPUT_BASE / "Incorretos"
 # Caminho logs
 #==============================
 LOG_PATH = BASE_DIR / "logs" / "historico_execucao.xlsx"
-LOG_DETALHE_PATH = BASE_DIR / "logs" / "historico_execucao_dt.xlsx"
-LOG_CLIENTE_PATH = BASE_DIR / "logs" / "historico_cliente.xlsx"
+LOG_DETALHE_PATH = BASE_DIR / "logs" / "historico_execucao_detalhado.xlsx"
 
 #==============================
 # garante que as pastas existem
