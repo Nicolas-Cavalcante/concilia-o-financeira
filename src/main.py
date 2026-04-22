@@ -103,6 +103,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         if controle["cancelar"]:
             return
 
+        atualizar_status("Salvando arquivos nas pastas...", 90)
         # Saída
         salvar(
             df_final=df_final,
@@ -114,7 +115,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             path_incorretos=config.OUTPUT_INCORRETOS
         )
 
-        atualizar_status("Salvando arquivos nas pastas...", 90)
+        
         #==============================================
         # 📊 analytics
         #==============================================
@@ -219,20 +220,27 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     #==============================================
     # 📌 Carrega LOG de Excução detalhado com chave unica
     #==============================================
-    df_log = df_final.copy()
+    df_log = df_planilha.copy()
     
-    # Se a coluna 'chave_match' não existir (caso o matching falhe antes de criar), criamos uma vazia
-    df_log['Nome da Empresa'] = df_log['Nome da Empresa']
-    df_log = df_log.groupby(['Nome da Empresa', 'chave_match']).agg(
-        corretos=('status', lambda x: (x == 'Ok').sum()),
-        incorretos=('status', lambda x: (x == 'Não Localizado').sum()),
-        ausencia_de_dados=('status', lambda x: (x == 'Colunas com ausência de dados').sum())
-    ).reset_index()
-    print(df_final.columns)
-    if 'chave_match' not in df_log.columns:
-        df_log['chave_match'] = 'Não Identificado'
+    df_log = (
+        df_planilha
+        .groupby('Nome da Empresa')['status']
+        .value_counts()
+        .unstack(fill_value=0)
+    )
 
-    df_log['id_execucao'] = id_execucao
+    # Garante todas as colunas
+    for col in ['Ok', 'Não Localizado', 'Colunas com ausência de dados']:
+        if col not in df_log.columns:
+            df_log[col] = 0
+
+    # Agora sim renomeia
+    df_log = df_log.rename(columns={
+        'Ok': 'corretos',
+        'Não Localizado': 'incorretos',
+        'Colunas com ausência de dados': 'ausencia_de_dados'
+    }).reset_index()
+    
     df_log['data_execucao'] = data_execucao
     df_log['celula'] = df_log['Nome da Empresa']
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
@@ -240,7 +248,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     df_log = df_log [
         [
             "data_execucao",
-            "chave_match",
             "celula",
             "Nome da Empresa",
             "incorretos",
@@ -272,18 +279,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
     df_log_chaves = df_log_chaves.rename(columns={
         'chave_match': 'chave',
+        'Colunas com ausência de dados': 'ausencia_de_dados',
         'Ok': 'qtd_encontrada',
         'Não Localizado': 'qtd_nao_encontrada'
     })
-
-    #dados_log = {
-    #    "data_execucao": data_execucao,
-    #    "qtd_total":len(df_planilha),
-    #    "qtd_correto": (df_planilha['status'] == 'Ok').sum(),
-    #    "qtd_nao_localizado":(df_planilha['status'] == 'Não Localizado').sum(),
-    #    "status_execucao":status_execucao,
-    #    "email_enviado": "Sim" if status_execucao == "Sucesso" else "Não",
-    #}
 
     registra_execucao_detalhada(config.LOG_DETALHE_PATH, df_log)
 

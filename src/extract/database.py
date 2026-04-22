@@ -95,7 +95,7 @@ def carregar_sql():
             LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
             LEFT JOIN dim_emissor EM ON FA.id_emissor = EM.id_emissor
             LEFT JOIN dim_tipo_pagamento DTP ON FA.id_tipo_pagamento = DTP.id_tipo_pagamento
-            WHERE FA.id_divisao = 2000 
+            WHERE FA.id_divisao IN (2000, 9000)
             AND nr_cartao_mascarado is not null
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO

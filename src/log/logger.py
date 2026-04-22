@@ -44,34 +44,34 @@ def registra_execucao_detalhada(path, df_log):
     # ENCONTRA PRIMEIRA OCORRÊNCIA
     # =========================
     
-    if not df_hist.empty:
-        df_primeira = (
-            df_hist.groupby('chave_match')['data_execucao']
-            .min()
-            .reset_index()
-            .rename(columns={'data_execucao': 'data_primeira_ocorrencia'})
-        )
+    #if not df_hist.empty:
+    #    df_primeira = (
+    #        df_hist.groupby('chave_match')['data_execucao']
+    #        .min()
+    #       .reset_index()
+    #        .rename(columns={'data_execucao': 'data_primeira_ocorrencia'})
+    #    )
 
-        df_log = df_log.merge(
-            df_primeira,
-            on='chave_match',
-            how='left'
-        )
-    else:
-        df_log['data_primeira_ocorrencia'] = pd.NaT
+    #    df_log = df_log.merge(
+    #        df_primeira,
+    #        on='chave_match',
+    #        how='left'
+    #    )
+    #else:
+    #    df_log['data_primeira_ocorrencia'] = pd.NaT
 
     # =========================
     # DEFINE PRIMEIRA OCORRÊNCIA
     # =========================
-    df_log['data_primeira_ocorrencia'] = df_log['data_primeira_ocorrencia'].fillna(df_log['data_execucao'])
+    #df_log['data_primeira_ocorrencia'] = df_log['data_primeira_ocorrencia'].fillna(df_log['data_execucao'])
 
 
     # =========================
     # CALCULA AGING
     # =========================
-    df_log['dias_em_aberto'] = (
-        df_log['data_execucao'] - df_log['data_primeira_ocorrencia']
-    ).dt.days
+    #df_log['dias_em_aberto'] = (
+    #    df_log['data_execucao'] - df_log['data_primeira_ocorrencia']
+    #).dt.days
 
     # =========================
     # SALVA HISTÓRICO (APPEND)
