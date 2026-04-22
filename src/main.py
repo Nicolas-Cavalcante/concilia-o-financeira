@@ -219,20 +219,22 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     #==============================================
     # 📌 Carrega LOG de Excução detalhado com chave unica
     #==============================================
-    df_log = df_planilha.copy()
-
+    df_log = df_final.copy()
+    
     # Se a coluna 'chave_match' não existir (caso o matching falhe antes de criar), criamos uma vazia
+    df_log['Nome da Empresa'] = df_log['Nome da Empresa']
+    df_log = df_log.groupby(['Nome da Empresa', 'chave_match']).agg(
+        corretos=('status', lambda x: (x == 'Ok').sum()),
+        incorretos=('status', lambda x: (x == 'Não Localizado').sum()),
+        ausencia_de_dados=('status', lambda x: (x == 'Colunas com ausência de dados').sum())
+    ).reset_index()
+    print(df_final.columns)
     if 'chave_match' not in df_log.columns:
         df_log['chave_match'] = 'Não Identificado'
 
     df_log['id_execucao'] = id_execucao
     df_log['data_execucao'] = data_execucao
     df_log['celula'] = df_log['Nome da Empresa']
-    df_log['cliente'] = df_log['Nome da Empresa']
-    df_log = df_log.groupby('Nome da Empresa').agg(
-        corretos=('status', lambda x: (x == 'Sim').sum()),
-        incorretos=('status', lambda x: (x != 'Sim').sum())
-    ).reset_index()
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
     
     df_log = df_log [
@@ -240,9 +242,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             "data_execucao",
             "chave_match",
             "celula",
-            "cliente",
+            "Nome da Empresa",
             "incorretos",
             "corretos",
+            "ausencia_de_dados",
             "status_email"
         ]
     ]
