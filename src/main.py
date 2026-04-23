@@ -87,7 +87,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         atualizar_status("Executando conciliação...", 75)
         time.sleep(1.5)
-        df_final, df_nao_localizados = executar_matching(df_planilha, df_sql, df_depara)
+        df_final, df_nao_localizados, df_log_chaves = executar_matching(df_planilha, df_sql, df_depara)
         dias_para_corte = df_nao_localizados['Dias Restantes'].min()
 
         if controle["cancelar"]:
@@ -266,22 +266,22 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     # e 'status' seja 'Ok' ou 'Não Localizado'
 
     df_log_chaves = (
-        df_planilha.groupby(['chave_match', 'status'])
+        df_log_chaves
+        .groupby(['chave', 'resultado'])
         .size()
         .unstack(fill_value=0)
         .reset_index()
     )
 
-    for col in ['Ok', 'Não Localizado']:
+    for col in ['Ok', 'nao_encontrado', 'incompleto']:
         if col not in df_log_chaves:
             df_log_chaves[col] = 0
     df_log_chaves['data_execucao'] = data_execucao
 
     df_log_chaves = df_log_chaves.rename(columns={
-        'chave_match': 'chave',
-        'Colunas com ausência de dados': 'ausencia_de_dados',
+        'incompleto': 'ausencia_de_dados',
         'Ok': 'qtd_encontrada',
-        'Não Localizado': 'qtd_nao_encontrada'
+        'nao_encontrado': 'qtd_nao_encontrada'
     })
 
     registra_execucao_detalhada(config.LOG_DETALHE_PATH, df_log)

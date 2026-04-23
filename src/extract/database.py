@@ -51,7 +51,6 @@ def carregar_sql():
             SO.vl_online_cliente,
             concat(SO.AUTORIZACAOCARTAOAMEX, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Aut + Data + Valor],
             concat(SO.loc_reserva, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Loc Cia + Data + Valor],
-            concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente) AS [Chave Cartão + Data + Valor],
             concat(SO.nr_cartao_mascarado, SO.dt_movimento, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Data + Valor + Loc Cia],
             concat(SO.nr_cartao_mascarado, SO.vl_online_cliente, SO.loc_reserva) AS [Chave Cartão + Valor + Loc Cia],
             SO.ds_centro_custo_cliente AS [Centro de Custo],
@@ -95,7 +94,7 @@ def carregar_sql():
             LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
             LEFT JOIN dim_emissor EM ON FA.id_emissor = EM.id_emissor
             LEFT JOIN dim_tipo_pagamento DTP ON FA.id_tipo_pagamento = DTP.id_tipo_pagamento
-            WHERE FA.id_divisao IN (2000, 9000)
+            WHERE FA.id_divisao IN (2000, 7000)
             AND nr_cartao_mascarado is not null
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO
