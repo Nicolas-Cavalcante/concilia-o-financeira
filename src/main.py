@@ -48,7 +48,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     try:
         # Extração
         if atualizar_status:
-            atualizar_status("Carregando base de pendências...", 10)
+            atualizar_status("Iniciando processo...", 10)
             time.sleep(1.7)
         df_planilha = carregar_planilha(input_path)
 
@@ -63,13 +63,13 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             return
 
         if atualizar_status:
-            atualizar_status("Conectando ao banco...", 35)
+            atualizar_status("Carregando base interna...", 35)
         df_sql = carregar_sql()
 
         if controle["cancelar"]:
             return
 
-        atualizar_status("Base carregada. Iniciando processamento...", 55)
+        atualizar_status("Bases carregadas. Iniciando processamento...", 55)
 
         if df_planilha.empty:
             raise ValueError("Planilha vazia")
@@ -78,7 +78,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             raise ValueError("Base SQL vazia")
 
         if atualizar_status:
-            atualizar_status("Trabalhando nas bases...", 65)
+            atualizar_status("Iniciando processo de conciliação...", 65)
             time.sleep(2.5)
         df_planilha = tratar_dados(df_planilha)
 
@@ -96,9 +96,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
 
-        if atualizar_status:
-            atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
-            #time.sleep(1.0)
+        atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
+        time.sleep(1.5)
 
         if controle["cancelar"]:
             return
