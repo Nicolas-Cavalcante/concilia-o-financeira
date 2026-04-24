@@ -238,6 +238,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
     (df_planilha['teve_match'] == True) & tem_asterisco,
     'status'
 ] = 'Colunas com ausência de dados'
+    
+    df_planilha.loc[df_planilha['Nome da Cia Aérea'] == 'FLYTOUR CALL CENT', 'status'] = 'Ok'
 
     # =========================
     # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS

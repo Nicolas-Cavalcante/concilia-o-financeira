@@ -49,10 +49,7 @@ def montar_corpo_email(html_tabela):
 
     <p>Os casos apontados no arquivo não foram localizados no sistema ou estão com informações faltantes.
 
-    </p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner, pois essas informações não foram localizadas no sistema.
-
-    <p><b>Resumo por Squad:</b><br>
-    {html_tabela}
+    </p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner.
     
     </p>Caso os dados não sejam ajustados, os campos permanecerão sem informação na fatura do cliente.</p>
 
@@ -60,8 +57,9 @@ def montar_corpo_email(html_tabela):
 
     </p>Solicitamos a regularização o quanto antes para evitar impactos para o cliente.</p>
 
-    <p><b>Resumo de evolução (vs ontem):</b></p>
-
+    <p><b>Resumo por Squad:</b><br>
+    {html_tabela}
+    
     """
 
 def montar_corpo_diretoria(qtde_casos, dias_min):
