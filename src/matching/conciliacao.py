@@ -2,6 +2,13 @@ import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, Alignment, Color
 
+
+# =========================
+# 📝 ESTE ARQUIVO É RESPONSÁVEL POR APLICAR TODA LÓGICA DE MATCHING ENTRE AS BASES, CRIAÇÃO DE STATUS E CRIAÇÃO
+# DOS ARQUIVOS FINAIS.
+# =========================
+
+
 def executar_matching(df_planilha, df_sql, df_depara):
 
     # =========================
@@ -215,12 +222,6 @@ def executar_matching(df_planilha, df_sql, df_depara):
 
     df_planilha[colunas_validacao] = (df_planilha[colunas_validacao].replace(r'^\s+$', '', regex=True).fillna(''))
     
-    df_planilha['dados_completos'] = (
-        df_planilha[colunas_validacao]
-        .ne('')
-        .all(axis=1)
-    )
-
     df_planilha['status'] = 'Ok'
 
     # 1.Não encontrou nenhuma chave
@@ -242,22 +243,6 @@ def executar_matching(df_planilha, df_sql, df_depara):
     df_planilha.loc[df_planilha['Nome da Cia Aérea'] == 'FLYTOUR CALL CENT', 'status'] = 'Ok'
 
     # =========================
-    # EXCLUI COLUNAS INDESEJADAS DAS PLANILHAS FINAIS
-    # =========================
-
-    df_planilha.drop(columns=[
-        #'match_encontrado',
-        #'RLOC_CIA_TRATADO',
-        #'RLOC_CIA_CORRETO',
-        #'Chave Aut + Data + Valor',
-        #'Chave Aut + Cartão + Data + Valor',
-        #'Chave Loc Cia + Data + Valor',
-        #'Chave Cartão + Data + Valor + Loc Cia',
-        #'Chave Cartão + Valor + Loc Cia',
-        #'status'
-        ], inplace=True)
-
-    # =========================
     # CRIA DF NÃO LOCALIZADOS PARA ENCAMINHAR PARA OPERAÇÃO
     # =========================
 
@@ -268,5 +253,5 @@ def executar_matching(df_planilha, df_sql, df_depara):
     # =========================
 
     df_preenchido = df_planilha[df_planilha['status'] == 'Ok'].copy()
-
+    
     return df_preenchido, df_nao_localizados, pd.DataFrame(log_chaves)

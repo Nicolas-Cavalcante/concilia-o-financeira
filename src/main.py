@@ -20,6 +20,10 @@ from src.log.logger import (
 )
 from src.notify.regra_envio import definir_destinatarios
 from src.notify.email import enviar_email
+from src.outputs_configs.layout import (
+    montar_layout_conciliados,
+    montar_layout_nao_localizados
+)
 
 #==============================================
 # ⚙️ IMPORTAÇÃO DAS BIBLIOTECAS
@@ -87,8 +91,11 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         atualizar_status("Executando conciliação...", 75)
         time.sleep(1.5)
-        df_final, df_nao_localizados, df_log_chaves = executar_matching(df_planilha, df_sql, df_depara)
+        df_conciliados_preenchido, df_nao_localizados, df_log_chaves = executar_matching(df_planilha, df_sql, df_depara)
         dias_para_corte = df_nao_localizados['Dias Restantes'].min()
+
+        df_conciliados = montar_layout_conciliados(df_conciliados_preenchido)
+        df_nao_conciliado = montar_layout_nao_localizados(df_nao_localizados)
 
         if controle["cancelar"]:
             return
@@ -105,27 +112,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         atualizar_status("Salvando arquivos nas pastas...", 90)
         # Saída
         salvar(
-            df_final=df_final,
-            df_nao_localizados=df_nao_localizados,
+            df_final=df_conciliados,
+            df_nao_localizados=df_nao_conciliado,
             df_sql=df_sql,
             df_planilha=df_planilha,
             path=config.OUTPUT_BASE,
             path_corretos=config.OUTPUT_CORRETOS,
             path_incorretos=config.OUTPUT_INCORRETOS
         )
-
-        
-        #==============================================
-        # 📊 analytics
-        #==============================================
-
-        # 🔴 provisório (até você ter df_ontem)
-        status_movimento = {
-            "Novos": 0,
-            "Resolvidos": 0,
-            "Pioraram": 0,
-            "Melhoraram": 0
-        }
 
         # =========================
         # CRIA TABELA PARA ENCAMINHAR NO CORPO DO EMAIL
