@@ -1,28 +1,38 @@
-#==============================
-# Config salva o local de caminho dos arquivos de entrada e saída
-#==============================
-
 from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent.parent
+import sys
 
-#==============================
-# Caminho outputs
-#==============================
-OUTPUT_BASE = BASE_DIR / "outputs"
+# ==============================
+# 🔹 BASE DO SISTEMA (para recursos internos, ex: logo)
+# ==============================
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent.parent
+
+BASE_DIR = get_base_path()
+
+# ==============================
+# 🔹 BASE DE EXECUÇÃO (onde roda o EXE)
+# ==============================
+EXEC_DIR = Path.cwd()
+
+# ==============================
+# 📁 OUTPUTS (sempre fora do exe)
+# ==============================
+OUTPUT_BASE = EXEC_DIR / "outputs"
 OUTPUT_CORRETOS = OUTPUT_BASE / "Corretos"
 OUTPUT_INCORRETOS = OUTPUT_BASE / "Incorretos"
 
-#==============================
-# Caminho logs
-#==============================
-LOG_PATH = BASE_DIR / "logs" / "historico_execucao.xlsx"
-LOG_DETALHE_PATH = BASE_DIR / "logs" / "historico_execucao_detalhado.xlsx"
+# ==============================
+# 📁 LOGS (também fora do exe)
+# ==============================
+LOG_DIR = EXEC_DIR / "logs"
+LOG_PATH = LOG_DIR / "historico_execucao.xlsx"
+LOG_DETALHE_PATH = LOG_DIR / "historico_execucao_detalhado.xlsx"
 
-#==============================
-# garante que as pastas existem
-#==============================
-LOG_PATH.parent.mkdir(exist_ok=True)
+# ==============================
+# 📁 GARANTE QUE AS PASTAS EXISTEM
+# ==============================
 OUTPUT_CORRETOS.mkdir(parents=True, exist_ok=True)
 OUTPUT_INCORRETOS.mkdir(parents=True, exist_ok=True)
-
-
+LOG_DIR.mkdir(parents=True, exist_ok=True)
