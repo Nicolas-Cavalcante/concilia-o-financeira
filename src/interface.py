@@ -1,13 +1,14 @@
 import tkinter as tk
-from tkinter import ttk
 import customtkinter as ctk
 import threading
-from tkinter import messagebox
-from tkinter import filedialog
-from src.main import main
 import traceback
 import os
 import subprocess
+import sys
+from tkinter import messagebox
+from tkinter import filedialog
+from src.main import main
+from pathlib import Path
 
 # ==============================
 # ROOT (uma única instância)
@@ -19,6 +20,67 @@ root.withdraw()
 #==============================================
 #🔧 1. SELEÇÃO DE ARQUIVOS
 #==============================================
+
+def get_base_path():
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent
+
+BASE_PATH = get_base_path()
+
+
+    #==============================================
+    # Configurações da janela de processamento
+    #==============================================
+
+def busca_arquivo_clientes():
+    pasta = Path.cwd() / "inputs"
+
+    if not pasta.exists():
+        return None
+    
+    arquivos = list(pasta.glob("Base_emails.xlsx"))
+
+    if not arquivos:
+        return None
+
+    if len(arquivos) > 1:
+        messagebox.showwarning(
+            "Atenção",
+            "Mais de um arquivo de base de clientes encontrado. Selecione manualmente."
+        )
+        return None
+    
+    return arquivos[0]
+
+    #==============================================
+    # Configurações da janela de processamento
+    #==============================================
+
+def busca_arquivo_pendencias():
+    pasta = Path.cwd() / "inputs"
+
+    if not pasta.exists():
+        return None
+    
+    arquivos = list(pasta.glob("pendencias*.xlsx"))
+
+    if not arquivos:
+        return None
+
+    if len(arquivos) > 1:
+        messagebox.showwarning(
+            "Atenção",
+            "Mais de um arquivo de base de clientes encontrado. Selecione manualmente."
+        )
+        return None
+    
+    return arquivos[0]
+
+    #==============================================
+    # Segue fluxo
+    #==============================================
+
 def selecionar_arquivo(titulo):
     return filedialog.askopenfilename(
         title=titulo,
@@ -27,7 +89,11 @@ def selecionar_arquivo(titulo):
 
 def iniciar_processo():
     input1 = selecionar_arquivo("Selecione o arquivo de pendências")
-    input2 = selecionar_arquivo("Selecione a base de clientes")
+
+    input2 = busca_arquivo_clientes()
+    
+    if not input2:
+        input2 = selecionar_arquivo("Selecione a base de clientes")
 
     if not input1 or not input2:
         messagebox.showerror("Erro", "Selecione ambos os arquivos")
@@ -55,7 +121,7 @@ def perguntar_envio_email():
 #==============================================
 
 def abrir_arquivo():
-    caminho = os.path.join("outputs", "Corretos", "Conciliados.xlsx")
+    caminho = BASE_PATH / "outputs" / "Corretos" / "Conciliados.xlsx"
 
     try:
         os.startfile(caminho)
