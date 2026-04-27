@@ -2,6 +2,12 @@ import pandas as pd
 from datetime import datetime
 from src.extract.pendencias import df_depara
 
+
+# =========================
+# 📝 ESTE ARQUIVO É RESPONSÁVEL POR TRATAR OS DADOS QUE VEM DO ARQUIVO DE PENDENCIAS DO BANCO, TRATANDO DADOS INDESEJADOS,
+# CRIANDO NOVAS COLUNAS E CHAVES PARA CONCILIAÇÃO.
+# =========================
+
 def tratar_dados(df):
 
     col = df['Nome da Cia Aérea'].fillna('')

@@ -4,8 +4,7 @@ from openpyxl.drawing.image import Image
 from openpyxl import Workbook
 from pathlib import Path
 
-#Esse arquivo é responsável pela importação das bases
-# E aplicação do layout em cada arquivo.
+# ESSE ARQUIVO É RESPONSÁVEL PELA IMPORTAÇÃO DAS BASES E APLICAÇÃO DO LAYOUT EM CADA ARQUIVO EXPORTADO.
 #==============================================
 # 📑 SALVA ARQUIVOS
 #==============================================
