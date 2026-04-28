@@ -7,8 +7,9 @@ import subprocess
 import sys
 from tkinter import messagebox
 from tkinter import filedialog
-from src.main import main
+import src.main
 from pathlib import Path
+from PIL import Image
 
 # ==============================
 # ROOT (uma única instância)
@@ -30,10 +31,10 @@ BASE_PATH = get_base_path()
 
 
     #==============================================
-    # Configurações da janela de processamento
+    # BUSCA ARQUIVO EMAILS AUTOMÁTICAMENTE E ALOCA NA FUNÇÃO
     #==============================================
 
-def busca_arquivo_clientes():
+def busca_arquivo_emails():
     pasta = Path.cwd() / "inputs"
 
     if not pasta.exists():
@@ -54,7 +55,7 @@ def busca_arquivo_clientes():
     return arquivos[0]
 
     #==============================================
-    # Configurações da janela de processamento
+    # BUSCA ARQUIVO PENDENCIAS AUTOMÁTICAMENTE E ALOCA NA FUNÇÃO
     #==============================================
 
 def busca_arquivo_pendencias():
@@ -78,7 +79,7 @@ def busca_arquivo_pendencias():
     return arquivos[0]
 
     #==============================================
-    # Segue fluxo
+    # FAZ SELEÇÃO DE ARQUIVOS
     #==============================================
 
 def selecionar_arquivo(titulo):
@@ -90,7 +91,7 @@ def selecionar_arquivo(titulo):
 def iniciar_processo():
     input1 = selecionar_arquivo("Selecione o arquivo de pendências")
 
-    input2 = busca_arquivo_clientes()
+    input2 = busca_arquivo_emails()
     
     if not input2:
         input2 = selecionar_arquivo("Selecione a base de clientes")
@@ -102,7 +103,7 @@ def iniciar_processo():
     controle = {"cancelar": False}
     enviar_email = perguntar_envio_email()
     tela_processamento(
-        lambda atualiza_status: main(input1, input2, enviar_email, atualiza_status, controle)
+        lambda atualiza_status: src.main.main(input1, input2, enviar_email, atualiza_status, controle)
         )
 
 #==============================================
@@ -142,7 +143,7 @@ def tela_processamento(funcao_processamento):
     root.deiconify()
     root.title("")
 
-    ctk.set_appearance_mode("light")
+    ctk.set_appearance_mode("dark")
     ctk.set_default_color_theme("green")
 
     root.update_idletasks()  # garante medidas corretas
@@ -150,7 +151,6 @@ def tela_processamento(funcao_processamento):
     # tamanho da janela
     largura = 420
     altura = 260
-
     
     # tamanho da tela
     largura_tela = root.winfo_screenwidth()
@@ -162,7 +162,7 @@ def tela_processamento(funcao_processamento):
 
     # aplica na janela
     root.geometry(f"{largura}x{altura}+{x}+{y}")
-    root.configure(bg="#F5F6FA")
+  
 
     root.attributes("-alpha", 0.0)
 
@@ -175,25 +175,63 @@ def tela_processamento(funcao_processamento):
     fade_in()
     
     # Inicia ajustes no container
-    container = ctk.CTkFrame(root, fg_color="#F5F6FA")
+    container = ctk.CTkFrame(
+        root,
+        fg_color=("#FFFFFF", "#121212"), # light, dark
+        corner_radius=6
+        )
     container.pack(expand=True, fill="both")
+
+    # Busca logo da empresa
+    caminho_logo_fly_light = BASE_PATH / "logo_fly_branca.png"
+    caminho_logo_fly_dark = BASE_PATH / "logo_fly_branca.png"
+
+    # Define parametros da imagem
+    logo_img = ctk.CTkImage(
+        light_image=Image.open(caminho_logo_fly_light),
+        dark_image=Image.open(caminho_logo_fly_dark),
+        size=(140, 70)
+    )
+
+    label_logo = ctk.CTkLabel(
+        container,
+        image=logo_img,
+        text=""
+    )
+    label_logo.pack(pady=(25, 5))
 
     # Titulo do Processamento
     title = ctk.CTkLabel(
         container,
-        text="Processamento EBTA",
-        font=("Calibri", 16, "bold"),
-        fg_color="#F5F6FA"
+        text="SmartCheck",
+        font=("Segoe UI", 16, "bold"),
+        text_color="#FFFFFF"  # light, dark"
     )
-    title.pack(pady=(20,10))
+    title.pack(pady=(5, 6))
     
+    texto_frame = ctk.CTkFrame(container, fg_color="transparent")
+    texto_frame.pack(pady=(5, 14))
+
+    spinner_label = ctk.CTkLabel(container, text="")
+    spinner_label.pack(pady=(5, 10))
+
     # Subtitulo do processamento
     label = ctk.CTkLabel(
-        container,
-        text="Preparando...",
-        font=("Calibri", 14, "bold")
+        texto_frame,
+        text="Preparando",
+        font=("Segoe UI", 13, "bold"),
+        text_color="#D1D5DB"
     )
-    label.pack(pady=10)
+    label.pack(side="left", padx=(0, 4))
+
+    label_pontos = ctk.CTkLabel(
+        texto_frame,
+        text="",
+        font=("Segoe UI", 13, "bold"),
+        text_color="#D1D5DB",
+        width=30
+    )
+    label_pontos.pack(side="left")
 
     # Barra de progresso
     progress = ctk.CTkProgressBar(
@@ -201,11 +239,12 @@ def tela_processamento(funcao_processamento):
         width=300,
         height=12,
         corner_radius=4,
-        progress_color="#2ECC71"
+        progress_color="#2ECC71",
+        fg_color="#2A2A2A" # fundo da barra
     )
 
     progress.set(0)
-    progress.pack(pady=10)
+    progress.pack(pady=(8, 6))
 
     progress.configure(mode="indeterminate")
     progress.start()
@@ -214,10 +253,11 @@ def tela_processamento(funcao_processamento):
     percent_label = ctk.CTkLabel(
         container,
         text="0%",
-        font=("Calibri", 12, "bold")
+        font=("Segoe UI", 12, "bold"),
+        text_color="#9CA3AF"
     )
 
-    percent_label.pack(pady=(0,10))
+    percent_label.pack(pady=(0, 15))
 
     #==============================================
     # CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
@@ -256,10 +296,47 @@ def tela_processamento(funcao_processamento):
     btn_abrir.pack(side="left", padx=8)
     btn_fechar.pack(side="left", padx=8)
 
+    #==============================================
+    # CRIA LABEL PARA O FINAL DO PROCESSAMENTO
+    #==============================================
+
+    resultado_label = ctk.CTkLabel(
+        container,
+        text="",
+        font=("Segoe UI", 12),
+        text_color="#9CA3AF"
+    )
+    resultado_label.pack(pady=(0, 10))
 
 #==============================================
 # Configurações execução do processamento
 #==============================================
+
+    # Variaveis globais
+    animar_id = 0
+
+    #==============================================
+    # CRIA ANIMAÇÃO NA EVOLUÇÃO DO PROCESSAMENTO
+    #==============================================
+    def animar_spinner():
+        frames = ["⟳", "⟲"]  # alterna sentido
+        idx = 0
+        meu_id = animar_id
+
+        def loop():
+            nonlocal idx
+            
+            try:
+                label_pontos.configure(text=frames[idx])
+            except:
+                return
+
+            idx = (idx + 1) % len(frames)
+            root.after(500, loop)
+
+        loop()
+
+    animar_spinner()
 
     #==============================================
     # CRIA ANIMAÇÃO NA EVOLUÇÃO DO PERCENTUAL
@@ -274,7 +351,7 @@ def tela_processamento(funcao_processamento):
         diff = target_progress - current_progress
 
         if abs(diff) > 0.001:
-            current_progress += diff * 0.1
+            current_progress += diff * 0.07
             progress.set(current_progress)
             root.after(16, animar_progresso)
         else:
@@ -316,13 +393,17 @@ def tela_processamento(funcao_processamento):
 
     def atualiza_status(texto, progresso=None):
         def update():
-            nonlocal target_progress
+            
+            nonlocal target_progress, animar_id
 
             if erro_ocorrido:
                 return
             
             try:
-                label.configure(text=texto)
+                texto_limpo = texto.rstrip(".")
+                label.configure(text=texto_limpo)
+
+                animar_id += 1
 
                 if progresso is not None:
                     progress.stop()
@@ -346,7 +427,8 @@ def tela_processamento(funcao_processamento):
 
     def rodar():
         try:
-            funcao_processamento(atualiza_status)
+            resultado = funcao_processamento(atualiza_status)
+            qtde_ok, qtde_erro = resultado
 
             # Mostra sucesso 
             def mostrar_sucesso():
@@ -359,7 +441,11 @@ def tela_processamento(funcao_processamento):
                 label.configure(
                     text="✔ Processamento concluído",
                     text_color="#0C6832",
-                    font=("Calibri", 14)
+                    font=("Segoe UI", 14)
+                )
+
+                resultado_label.configure(
+                    text=f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados"
                 )
 
                 buttons_frame.pack(pady=(10,10))

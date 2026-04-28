@@ -15,7 +15,7 @@ def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_correto
         df_final,
         path_corretos / "Conciliados.xlsx",
         #Caminho da Logo do bradesco
-        caminho_logo= Path("inputs") / "Logo_Bradesco.png"
+        caminho_logo= Path("inputs") / "logo_bradesco.png"
         )
     
     df_nao_localizados.to_excel(path_incorretos / "Pendências_EBTA.xlsx", index=False)

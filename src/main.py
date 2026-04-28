@@ -52,7 +52,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     try:
         # Extração
         if atualizar_status:
-            atualizar_status("Iniciando processo...", 10)
+            atualizar_status("Iniciando processo", 10)
             time.sleep(1.7)
         df_planilha = carregar_planilha(input_path)
 
@@ -60,20 +60,20 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             return
 
         if atualizar_status:
-            atualizar_status("Carregando base de clientes...", 20)
+            atualizar_status("Carregando base de clientes", 20)
         df_base_email = carregar_base_email(input_path2)
 
         if controle["cancelar"]:
             return
 
         if atualizar_status:
-            atualizar_status("Carregando base interna...", 35)
+            atualizar_status("Carregando base interna", 35)
         df_sql = carregar_sql()
 
         if controle["cancelar"]:
             return
 
-        atualizar_status("Bases carregadas. Iniciando processamento...", 55)
+        atualizar_status("Bases carregadas. Iniciando processamento", 55)
 
         if df_planilha.empty:
             raise ValueError("Planilha vazia")
@@ -82,14 +82,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             raise ValueError("Base SQL vazia")
 
         if atualizar_status:
-            atualizar_status("Iniciando processo de conciliação...", 65)
+            atualizar_status("Iniciando processo de conciliação", 65)
             time.sleep(2.5)
         df_planilha = tratar_dados(df_planilha)
 
         if controle["cancelar"]:
             return
 
-        atualizar_status("Executando conciliação...", 75)
+        atualizar_status("Executando conciliação", 75)
         time.sleep(1.5)
         df_conciliados_preenchido, df_nao_localizados, df_log_chaves = executar_matching(df_planilha, df_sql, df_depara)
         dias_para_corte = df_nao_localizados['Dias Restantes'].min()
@@ -103,13 +103,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
 
-        atualizar_status(f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados", 85)
-        time.sleep(1.5)
-
         if controle["cancelar"]:
             return
 
-        atualizar_status("Salvando arquivos nas pastas...", 90)
+        atualizar_status("Salvando arquivos nas pastas", 90)
         # Saída
         salvar(
             df_final=df_conciliados,
@@ -193,7 +190,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     anexos=None
                 )
 
-            atualizar_status("Finalizando...", 95)
+            atualizar_status("Finalizando", 95)
             time.sleep(1.5)
         
 
@@ -280,6 +277,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     registra_execucao_detalhada(config.LOG_DETALHE_PATH, df_log)
 
     registrar_execucao_chaves(config.LOG_PATH, df_log_chaves)
+    
+    return qtde_ok, qtde_erro
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
