@@ -9,13 +9,13 @@ from tkinter import messagebox
 from tkinter import filedialog
 import src.main
 from pathlib import Path
-from PIL import Image, ImageOps
+from PIL import Image
 
 # ==============================
 # ROOT (uma única instância)
 # ==============================
 
-root = ctk.CTk()
+root = tk.Tk()
 root.withdraw()
 
 #==============================================
@@ -172,73 +172,17 @@ def tela_processamento(funcao_processamento):
 
     fade_in()
     
-#==============================================
-# INICIA AJUSTES NO CONTAINER
-#==============================================
-
-    #==============================================
-    # BUSCA CAMINHOS DAS IMAGENS
-    #==============================================
+    # Inicia ajustes no container
+    container = ctk.CTkFrame(
+        root,
+        fg_color=("#FFFFFF", "#121212"), # light, dark
+        corner_radius=6
+        )
+    container.pack(expand=True, fill="both")
 
     # Busca logo da empresa
     caminho_logo_fly_light = BASE_PATH / "logo_fly_branca.png"
-    caminho_background = BASE_PATH / "fundo_fly.png"
-    #caminho_logo_fly_dark = BASE_PATH / "logo_fly_branca.png"
-
-    #==============================================
-    # CONFIGURA CONTAINER PRINCIPAL
-    #==============================================
-
-    container = ctk.CTkFrame(
-        root,
-       fg_color=("transparent"), # light, dark
-        corner_radius=6
-        )
-
-    #==============================================
-    # CARREGA IMAGEM DE BACKGROUND
-    #==============================================
-
-    img=Image.open(caminho_background)
-    img = img.point(lambda p: p * 0.6)
-    img = ImageOps.fit(
-        img,
-        (420, 260),
-        method=Image.LANCZOS
-    )
-
-    bg_img = ctk.CTkImage(
-        light_image=img,
-        dark_image=img,
-        size=(420, 260)
-    )
-
-    #==============================================
-    # CRIA FUNDO
-    #==============================================
-
-    backgorund_label = ctk.CTkLabel(
-        root,
-        image=bg_img,
-        text=""
-    )
-    backgorund_label.image = bg_img
-    backgorund_label.place(x=0, y=0, relwidth=1, relheight=1)
-
-    #==============================================
-    # TORNA CONTAINER TRANSPARENTE
-    #==============================================
-
-    container = ctk.CTkFrame(
-        root,
-        fg_color="transparent",
-        corner_radius=6
-    )
-    container.place(relwidth=1, relheight=1)
-
-    #==============================================
-    # CONFIGURA PARAMETROS DA LOGO
-    #==============================================
+    caminho_logo_fly_dark = BASE_PATH / "logo_fly_branca.png"
 
     # Define parametros da imagem
     logo_img = ctk.CTkImage(
@@ -254,10 +198,7 @@ def tela_processamento(funcao_processamento):
     )
     label_logo.pack(pady=(25, 5))
 
-    #==============================================
-    # CONFIGURA TITULO DO CONTAINER
-    #==============================================
-
+    # Titulo do Processamento
     title = ctk.CTkLabel(
         container,
         text="SmartCheck",
@@ -269,10 +210,7 @@ def tela_processamento(funcao_processamento):
     texto_frame = ctk.CTkFrame(container, fg_color="transparent")
     texto_frame.pack(pady=(5, 14))
 
-    #==============================================
-    # CONFIGURA SUBTITULO DO CONTAINER
-    #==============================================
-
+    # Subtitulo do processamento
     label = ctk.CTkLabel(
         texto_frame,
         text="Preparando",
@@ -280,10 +218,6 @@ def tela_processamento(funcao_processamento):
         text_color="#D1D5DB"
     )
     label.pack(side="left", padx=(0, 4))
-
-    #==============================================
-    # CONFIGURA PONTOS DINAMICOS
-    #==============================================
 
     label_pontos = ctk.CTkLabel(
         texto_frame,
@@ -293,10 +227,7 @@ def tela_processamento(funcao_processamento):
     )
     label_pontos.pack(side="left", padx=(6, 0))
 
-    #==============================================
-    # CONFIGURA BARRA DE PROGRESSO
-    #==============================================
-
+    # Barra de progresso
     progress = ctk.CTkProgressBar(
         container,
         width=300,
@@ -312,10 +243,7 @@ def tela_processamento(funcao_processamento):
     progress.configure(mode="indeterminate")
     progress.start()
 
-    #==============================================
-    # CONFIGURA PERCENTUAL DE CARREGAMENTO
-    #==============================================
-
+    # Percentual de carregamento
     percent_label = ctk.CTkLabel(
         container,
         text="0%",
@@ -491,6 +419,7 @@ def tela_processamento(funcao_processamento):
                 tratar_erro_ui(e)
 
         root.after(0,update)
+        root.update()
 
     #==============================================
     # ✅ FUNÇÃO PARA RODAR O PROCESSO
