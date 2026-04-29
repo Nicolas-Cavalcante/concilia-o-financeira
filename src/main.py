@@ -62,6 +62,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         if atualizar_status:
             atualizar_status("Carregando base de clientes", 20)
         df_base_email = carregar_base_email(input_path2)
+        time.sleep(0.1)
 
         if controle["cancelar"]:
             return
