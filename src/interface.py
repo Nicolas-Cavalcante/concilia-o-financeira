@@ -9,14 +9,14 @@ from tkinter import messagebox
 from tkinter import filedialog
 import src.main
 from pathlib import Path
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageTk
 
 # ==============================
 # ROOT (uma única instância)
 # ==============================
 
 root = ctk.CTk()
-root.withdraw()
+#root.configure(fg_color="black")
 
 #==============================================
 #🔧 1. SELEÇÃO DE ARQUIVOS
@@ -120,7 +120,7 @@ def perguntar_envio_email():
 #==============================================
 
 def abrir_arquivo():
-    caminho = BASE_PATH / "outputs" / "Corretos" / "Conciliados.xlsx"
+    caminho = Path.cwd() / "outputs" / "Corretos" / "Conciliados.xlsx"
 
     try:
         os.startfile(caminho)
@@ -131,21 +131,52 @@ def abrir_arquivo():
 #🔧 3. POPUP DE PROCESSAMENTO DO CÓDIGO
 #==============================================
 
+BACKGROUND_IMG = None
+
+def carregar_background():
+    global BACKGROUND_IMG
+
+    caminho_background = BASE_PATH / "fundo_fly.png"
+
+    if not caminho_background.exists():
+        raise FileNotFoundError(f"Imagem não encontrada: {caminho_background}")
+
+    img = Image.open(caminho_background).convert("RGBA")
+
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, 120))
+    img = Image.alpha_composite(img, overlay)
+
+    BACKGROUND_IMG = img
+
+carregar_background()
+
+
+logo_img = None
+
+def carregar_logo():
+    global logo_img
+
+    img = Image.open(BASE_PATH / "logo_fly_branca.png")
+
+    logo_img = ctk.CTkImage(
+        light_image=img,
+        dark_image=img,
+        size=(140, 70)
+    )
+
+carregar_logo()
+
     #==============================================
     # Configurações da janela de processamento
     #==============================================
 
 def tela_processamento(funcao_processamento):
+    
 
     erro_ocorrido = False
-    root.deiconify()
     root.title("")
+    root.configure(fg_color="#1A2440")
 
-    ctk.set_appearance_mode("dark")
-    ctk.set_default_color_theme("green")
-
-    root.update_idletasks()  # garante medidas corretas
-    root.resizable(False, False)
     # tamanho da janela
     largura = 420
     altura = 260
@@ -160,114 +191,91 @@ def tela_processamento(funcao_processamento):
 
     # aplica na janela
     root.geometry(f"{largura}x{altura}+{x}+{y}")
-  
+    root.resizable(False, False
+                   )
+    # 2. cria canvas já no tamanho correto
+    canvas = tk.Canvas(root, highlightthickness=0)
+    canvas.place(x=0, y=0, relwidth=1, relheight=1)
 
-    root.attributes("-alpha", 0.0)
+    root.update()  # 👈 ESSENCIAL
 
-    def fade_in(opacity=0.0):
-        opacity += 0.03
-        if opacity <= 1:
-            root.attributes("-alpha", opacity)
-            root.after(2, fade_in, opacity)
+    largura_real = canvas.winfo_width()
+    altura_real = canvas.winfo_height()
 
-    fade_in()
+    img = ImageOps.fit(BACKGROUND_IMG, (largura_real, altura_real), Image.LANCZOS)
+
+    # 3. cria imagem
+    bg_tk = ImageTk.PhotoImage(img)
+    canvas.bg_tk = bg_tk
+
+    canvas.create_image(
+        0, 0,
+        anchor="nw",
+        image=bg_tk
+    )
+
+    #def fade_in(opacity=0.0):
+    #    opacity += 0.03
+    #    if opacity <= 1:
+    #        root.attributes("-alpha", opacity)
+    #        root.after(10, fade_in, opacity)
+
+    #fade_in()
     
 #==============================================
 # INICIA AJUSTES NO CONTAINER
 #==============================================
 
     #==============================================
-    # BUSCA CAMINHOS DAS IMAGENS
-    #==============================================
-
-    # Busca logo da empresa
-    caminho_logo_fly_light = BASE_PATH / "logo_fly_branca.png"
-    caminho_background = BASE_PATH / "fundo_fly.png"
-    #caminho_logo_fly_dark = BASE_PATH / "logo_fly_branca.png"
-
-    #==============================================
-    # CONFIGURA CONTAINER PRINCIPAL
-    #==============================================
-
-    container = ctk.CTkFrame(
-        root,
-       fg_color=("transparent"), # light, dark
-        corner_radius=6
-        )
-
-    #==============================================
-    # CARREGA IMAGEM DE BACKGROUND
-    #==============================================
-
-    img=Image.open(caminho_background)
-    img = img.point(lambda p: p * 0.6)
-    img = ImageOps.fit(
-        img,
-        (420, 260),
-        method=Image.LANCZOS
-    )
-
-    bg_img = ctk.CTkImage(
-        light_image=img,
-        dark_image=img,
-        size=(420, 260)
-    )
-
-    #==============================================
     # CRIA FUNDO
     #==============================================
 
-    backgorund_label = ctk.CTkLabel(
-        root,
-        image=bg_img,
-        text=""
-    )
-    backgorund_label.image = bg_img
-    backgorund_label.place(x=0, y=0, relwidth=1, relheight=1)
+    #backgorund_label = ctk.CTkLabel(
+    #    root,
+    #    image=BACKGROUND_IMG,
+    #    text=""
+    #
+    #backgorund_label.place(x=0, y=0, relwidth=1, relheight=1)
+    #backgorund_label.lower()
+    #root.deiconify()
 
     #==============================================
     # TORNA CONTAINER TRANSPARENTE
     #==============================================
 
-    container = ctk.CTkFrame(
-        root,
-        fg_color="transparent",
-        corner_radius=6
-    )
-    container.place(relwidth=1, relheight=1)
+    #container = ctk.CTkFrame(
+    #    root,
+    #    fg_color="#1F2A44"
+    #)
+    #container.place(relwidth=1, relheight=1)
 
     #==============================================
     # CONFIGURA PARAMETROS DA LOGO
     #==============================================
 
-    # Define parametros da imagem
-    logo_img = ctk.CTkImage(
-        light_image=Image.open(caminho_logo_fly_light),
-        #dark_image=Image.open(caminho_logo_fly_dark),
-        size=(140, 70)
-    )
-
     label_logo = ctk.CTkLabel(
-        container,
+        root,
         image=logo_img,
-        text=""
+        text="",
+        fg_color="transparent"
     )
-    label_logo.pack(pady=(25, 5))
+    label_logo.place(relx=0.5, rely=0.15, anchor="center")
 
     #==============================================
     # CONFIGURA TITULO DO CONTAINER
     #==============================================
 
     title = ctk.CTkLabel(
-        container,
+        root,
         text="SmartCheck",
         font=("Segoe UI", 16, "bold"),
-        text_color="#FFFFFF"  # light, dark"
+        text_color="#FFFFFF",  # light, dark"
+        fg_color="transparent"
     )
-    title.pack(pady=(5, 6))
+    title.place(relx=0.5, rely=0.35, anchor="center")
     
-    texto_frame = ctk.CTkFrame(container, fg_color="transparent")
-    texto_frame.pack(pady=(5, 14))
+    texto_frame = ctk.CTkFrame(root, fg_color="transparent")
+    texto_frame.place(relx=0.5, rely=0.45, anchor="center")
 
     #==============================================
     # CONFIGURA SUBTITULO DO CONTAINER
@@ -277,7 +285,8 @@ def tela_processamento(funcao_processamento):
         texto_frame,
         text="Preparando",
         font=("Segoe UI", 13, "bold"),
-        text_color="#D1D5DB"
+        text_color="#D1D5DB",
+        fg_color="transparent"
     )
     label.pack(side="left", padx=(0, 4))
 
@@ -289,7 +298,8 @@ def tela_processamento(funcao_processamento):
         texto_frame,
         text="",
         font=("Segoe UI", 16, "bold"),
-        text_color="#51B772"  # verde igual barra
+        text_color="#51B772",  # verde igual barra
+        fg_color="transparent"    
     )
     label_pontos.pack(side="left", padx=(6, 0))
 
@@ -298,7 +308,7 @@ def tela_processamento(funcao_processamento):
     #==============================================
 
     progress = ctk.CTkProgressBar(
-        container,
+        root,
         width=300,
         height=12,
         corner_radius=4,
@@ -307,7 +317,7 @@ def tela_processamento(funcao_processamento):
     )
 
     progress.set(0)
-    progress.pack(pady=(8, 6))
+    progress.place(relx=0.5, rely=0.6, anchor="center")
 
     progress.configure(mode="indeterminate")
     progress.start()
@@ -317,19 +327,20 @@ def tela_processamento(funcao_processamento):
     #==============================================
 
     percent_label = ctk.CTkLabel(
-        container,
+        root,
         text="0%",
         font=("Segoe UI", 12, "bold"),
-        text_color="#9CA3AF"
+        text_color="#9CA3AF",
+        fg_color="transparent"
     )
 
-    percent_label.pack(pady=(0, 15))
+    percent_label.place(relx=0.5, rely=0.68, anchor="center")
 
     #==============================================
     # CRIA BOTÃO PARA ABRIR O ARQUIVO NO FINAL DO PROCESSAMENTO
     #==============================================
 
-    buttons_frame = ctk.CTkFrame(container, fg_color="transparent")
+    buttons_frame = ctk.CTkFrame(root, fg_color="transparent")
 
     btn_abrir = ctk.CTkButton(
         buttons_frame,
@@ -367,12 +378,12 @@ def tela_processamento(funcao_processamento):
     #==============================================
 
     resultado_label = ctk.CTkLabel(
-        container,
+        root,
         text="",
         font=("Segoe UI", 12),
         text_color="#9CA3AF"
     )
-    resultado_label.pack(pady=(0, 10))
+    resultado_label.place(relx=0.5, rely=0.85, anchor="center")
 
 #==============================================
 # Configurações execução do processamento
@@ -490,7 +501,7 @@ def tela_processamento(funcao_processamento):
             except Exception as e:
                 tratar_erro_ui(e)
 
-        root.after(0,update)
+        root.after(0, update)
 
     #==============================================
     # ✅ FUNÇÃO PARA RODAR O PROCESSO
@@ -521,7 +532,9 @@ def tela_processamento(funcao_processamento):
                     text_color="#FFFFFF"
                 )
 
-                buttons_frame.pack(pady=(10,10))
+                resultado_label.place(relx=0.5, rely=0.76, anchor="center")
+
+                buttons_frame.place(relx=0.5, rely=0.9, anchor="center")
 
             root.after(0, mostrar_sucesso)
         
@@ -538,13 +551,17 @@ def tela_processamento(funcao_processamento):
 
             print(traceback.format_exc())
             root.after(0, lambda: messagebox.showerror("Erro", erro))
+
             root.after(10000, root.destroy)
 
-    threading.Thread(target=rodar, daemon=True).start()
-    root.mainloop()
+    label.configure(text="Iniciando processo...")
+    percent_label.configure(text="0%")
+
+    root.after(50, lambda: threading.Thread(target=rodar, daemon=True).start())
 
 # ==============================
 # 4. EXECUÇÃO
 # ==============================
 if __name__ == "__main__":
-    iniciar_processo()
+    root.after(0, iniciar_processo)
+    root.mainloop()
