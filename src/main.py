@@ -53,7 +53,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # Extração
         if atualizar_status:
             atualizar_status("Iniciando processo", 10)
-            time.sleep(1.7)
         df_planilha = carregar_planilha(input_path)
 
         if controle["cancelar"]:
@@ -61,8 +60,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         if atualizar_status:
             atualizar_status("Carregando base de clientes", 20)
+            time.sleep(0.05)
         df_base_email = carregar_base_email(input_path2)
-        time.sleep(0.1)
 
         if controle["cancelar"]:
             return
