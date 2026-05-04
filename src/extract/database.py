@@ -19,27 +19,28 @@ def carregar_sql():
     hoje = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Primeiro dia do mês atual
-    primeiro_dia_mes_atual = hoje.replace(day=1)
+    meses_atras = 3
 
-    # Volta 1 dia → cai no mês anterior
-    ultimo_dia_mes_anterior = primeiro_dia_mes_atual - timedelta(days=1)
+    #Calcular o primeiro dia do mês de partida
+    ano = hoje.year
+    mes = hoje.month
 
-    # Primeiro dia de 2 meses atrás
-    primeiro_dia_dois_meses_atras = ultimo_dia_mes_anterior.replace(day=1) - timedelta(days=1)
-    primeiro_dia_dois_meses_atras = primeiro_dia_dois_meses_atras.replace(day=1)
+    for _ in range(meses_atras):
+        mes -= 1
+        if mes == 0:
+            mes = 12
+            ano -= 1
 
-    # Último dia do mês atual
-    ultimo_dia_mes_atual = hoje.replace(
-        day=calendar.monthrange(hoje.year, hoje.month)[1],
-        hour=23, minute=59, second=59
-    )
+    data_inicial = datetime(ano, mes, 1)
 
-    data_inicial = primeiro_dia_dois_meses_atras
-    data_final = ultimo_dia_mes_atual
+    # Último dia do mês atual (para a data final)
+    ultimo_dia = calendar.monthrange(hoje.year, hoje.month)[1]
+    data_final = hoje.replace(day=ultimo_dia, hour=23, minute=59, second=59)
 
    # ===== QUERY SQL =====
     query = f"""
         SELECT
+            SO.nm_cliente,
             SO.nr_autorizacao_cartao,
             SO.AUTORIZACAOCARTAOAMEX,
             SO.tipo_pagamento,
@@ -65,6 +66,7 @@ def carregar_sql():
             SO.nm_emissor AS Emissor
         FROM
         (SELECT
+            DC.nm_cliente,
             nr_autorizacao_cartao,
             AUTORIZACAOCARTAOAMEX,
             DTP.dsc_tipo_pagto AS tipo_pagamento,
@@ -89,6 +91,7 @@ def carregar_sql():
             CONVIDADO,
             EM.nm_emissor
         FROM fato_aereo FA
+            LEFT JOIN dim_cliente DC ON FA.id_cliente = DC.id_cliente
             LEFT JOIN dim_passageiro DP ON FA.id_passageiro = DP.id_passageiro 
             LEFT JOIN dim_contato_solicitante DS ON FA.id_solicitante = DS.id_solicitante
             LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
@@ -99,6 +102,7 @@ def carregar_sql():
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO
     """
+    print(f"buscando dados de {data_inicial} até {data_final}")
 
     df_sql = pd.read_sql(query, conn)
 

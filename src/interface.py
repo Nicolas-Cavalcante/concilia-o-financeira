@@ -1,12 +1,12 @@
 import tkinter as tk
+from tkinter import messagebox
+from tkinter import filedialog
 import customtkinter as ctk
 import threading
 import traceback
 import os
 import subprocess
 import sys
-from tkinter import messagebox
-from tkinter import filedialog
 import src.main
 from pathlib import Path
 from PIL import Image, ImageOps, ImageTk
@@ -172,10 +172,9 @@ carregar_logo()
 
 def tela_processamento(funcao_processamento):
     
-
     erro_ocorrido = False
     root.title("")
-    root.configure(fg_color="#1A2440")
+    root.configure(fg_color="#0E1322")
 
     # tamanho da janela
     largura = 420
@@ -330,7 +329,7 @@ def tela_processamento(funcao_processamento):
         root,
         text="0%",
         font=("Segoe UI", 12, "bold"),
-        text_color="#9CA3AF",
+        text_color="#EEEFF1",
         fg_color="transparent"
     )
 
@@ -523,7 +522,7 @@ def tela_processamento(funcao_processamento):
 
                 label.configure(
                     text="✔ Processamento concluído",
-                    text_color="#129247",
+                    text_color="#19AA55",
                     font=("Segoe UI", 14)
                 )
 
