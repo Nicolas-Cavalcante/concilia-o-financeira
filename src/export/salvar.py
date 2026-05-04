@@ -19,7 +19,7 @@ def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_correto
         )
     
     df_nao_localizados.to_excel(path_incorretos / "Pendências_EBTA.xlsx", index=False)
-    #df_sql.to_excel(path / "df_sql.xlsx", index=False)
+    df_sql.to_excel(path / "df_sql.xlsx", index=False)
     #df_planilha.to_excel(path / "df_planilha.xlsx", index=False)
 
     # Esse caminho serve como base ao openpyxl para tratar o estilo na função abaixo
@@ -88,6 +88,7 @@ def salvar_df_final_formatado(df_final, caminho_arquivo, caminho_logo):
 
     wb = Workbook()
     ws = wb.active
+    ws.title = "Pendencias"
 
     HEADER_ROW = 4
     DATA_START_ROW = 5

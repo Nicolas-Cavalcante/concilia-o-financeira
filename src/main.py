@@ -60,7 +60,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         if atualizar_status:
             atualizar_status("Carregando base de clientes", 20)
-            time.sleep(0.05)
         df_base_email = carregar_base_email(input_path2)
 
         if controle["cancelar"]:
@@ -74,6 +73,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             return
 
         atualizar_status("Bases carregadas. Iniciando processamento", 55)
+        time.sleep(2.5)
 
         if df_planilha.empty:
             raise ValueError("Planilha vazia")
