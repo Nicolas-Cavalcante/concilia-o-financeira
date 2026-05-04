@@ -48,16 +48,16 @@ def tratar_dados(df):
         df['Valor Total']
     )
 
-    # Cria chave Cartão + Data + Valor como KEY 2
-    df['Chave Loc Cia + Data + Valor'] = (
-        df['RLOC_CIA_CORRETO'].astype(str) +
+    # Cria Chave Aut + Data + Valor como KEY 2
+    df['Chave nr_aut + Data + Valor'] = (
+        df['Autorização'].astype(str) +
         df['Data de Emissão'].astype(str) +
         df['Valor Total']
     )
 
     # Cria chave Cartão + Data + Valor como KEY 3
-    df['Chave Cartão + Data + Valor'] = (
-        df['Cartão'].astype(str).str[-3:] +
+    df['Chave Loc Cia + Data + Valor'] = (
+        df['RLOC_CIA_CORRETO'].astype(str) +
         df['Data de Emissão'].astype(str) +
         df['Valor Total']
     )
@@ -82,6 +82,8 @@ def tratar_dados(df):
         df['Nome da Empresa'].astype(str) +
         df['Chave Aut + Data + Valor'].astype(str)
     )
+
+
 
     #Cria coluna data de fechamento
     data_execucao = pd.Timestamp.today().normalize()
