@@ -29,6 +29,9 @@ def get_base_path():
 
 BASE_PATH = get_base_path()
 
+foto = tk.PhotoImage(file=str(BASE_PATH / "logo_fly_azul.png"))
+root.iconphoto(True, foto)
+
     #==============================================
     # BUSCA ARQUIVO EMAILS AUTOMÁTICAMENTE E ALOCA NA FUNÇÃO
     #==============================================
@@ -149,7 +152,6 @@ def carregar_background():
     BACKGROUND_IMG = img
 
 carregar_background()
-
 
 logo_img = None
 

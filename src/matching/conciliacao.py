@@ -21,9 +21,14 @@ def executar_matching(df_planilha, df_sql, df_depara):
     chaves_validas_k1 = set(unicos_sql_k1).intersection(set(unicos_plan_k1))
 
     # Chave KEY 2 🗝️
-    unicos_sql_k2 = df_sql['Chave Loc Cia + Data + Valor'][~df_sql['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
-    unicos_plan_k2 = df_planilha['Chave Loc Cia + Data + Valor'][~df_planilha['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
+    unicos_sql_k2 = df_sql['Chave nr_aut + Data + Valor'][~df_sql['Chave nr_aut + Data + Valor'].duplicated(keep=False)]
+    unicos_plan_k2 = df_planilha['Chave Aut + Data + Valor'][~df_planilha['Chave Aut + Data + Valor'].duplicated(keep=False)]
     chaves_validas_k2 = set(unicos_sql_k2).intersection(set(unicos_plan_k2))
+
+    # Chave KEY 3 🗝️
+    unicos_sql_k3 = df_sql['Chave Loc Cia + Data + Valor'][~df_sql['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
+    unicos_plan_k3 = df_planilha['Chave Loc Cia + Data + Valor'][~df_planilha['Chave Loc Cia + Data + Valor'].duplicated(keep=False)]
+    chaves_validas_k3 = set(unicos_sql_k3).intersection(set(unicos_plan_k3))
 
     # Chave KEY 4 🗝️
     #unicos_sql_k3 = df_sql['Chave Cartão + Data + Valor'][~df_sql['Chave Cartão + Data + Valor'].duplicated(keep=False)]
@@ -50,8 +55,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
     # =========================
 
     map_k1 = df_sql[df_sql['Chave Aut + Data + Valor'].isin(chaves_validas_k1)].set_index('Chave Aut + Data + Valor')
-    map_k2 = df_sql[df_sql['Chave Loc Cia + Data + Valor'].isin(chaves_validas_k2)].set_index('Chave Loc Cia + Data + Valor')
-    #map_k3 = df_sql[df_sql['Chave Cartão + Data + Valor'].isin(chaves_validas_k3)].set_index('Chave Cartão + Data + Valor')
+    map_k2 = df_sql[df_sql['Chave nr_aut + Data + Valor'].isin(chaves_validas_k2)].set_index('Chave nr_aut + Data + Valor')
+    map_k3 = df_sql[df_sql['Chave Loc Cia + Data + Valor'].isin(chaves_validas_k3)].set_index('Chave Loc Cia + Data + Valor')
     map_k4 = df_sql[df_sql['Chave Cartão + Data + Valor + Loc Cia'].isin(chaves_validas_k4)].set_index('Chave Cartão + Data + Valor + Loc Cia')
     map_k5 = df_sql[df_sql['Chave Cartão + Valor + Loc Cia'].isin(chaves_validas_k5)].set_index('Chave Cartão + Valor + Loc Cia')
     #map_k7 = df_sql[df_sql['Chave Cartão + Valor'].isin(chaves_validas_k7)].set_index('Chave Cartão + Valor')
@@ -117,8 +122,8 @@ def executar_matching(df_planilha, df_sql, df_depara):
 
     chaves = [
         ('Chave Aut + Data + Valor', map_k1, chaves_validas_k1),
-        ('Chave Loc Cia + Data + Valor', map_k2, chaves_validas_k2),
-        #('Chave Cartão + Data + Valor', map_k3, chaves_validas_k3),
+        ('Chave nr_aut + Data + Valor', map_k2, chaves_validas_k2),
+        ('Chave Loc Cia + Data + Valor', map_k3, chaves_validas_k3),
         ('Chave Cartão + Data + Valor + Loc Cia', map_k4, chaves_validas_k4),
         ('Chave Cartão + Valor + Loc Cia', map_k5, chaves_validas_k5),
         #('Chave Cartão + Valor', map_k7, chaves_validas_k7),
@@ -240,7 +245,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
     'status'
 ] = 'Colunas com ausência de dados'
     
-    df_planilha.loc[df_planilha['Nome da Cia Aérea'] == 'FLYTOUR CALL CENT', 'status'] = 'Ok'
+    #df_planilha.loc[df_planilha['Nome da Cia Aérea'] == 'FLYTOUR CALL CENT', 'status'] = 'Ok'
 
     # =========================
     # CRIA DF NÃO LOCALIZADOS PARA ENCAMINHAR PARA OPERAÇÃO
