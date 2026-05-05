@@ -1,118 +1,133 @@
-# SmartCheck - Documentação do Projeto
+SmartCheck - Documentação do Projeto
 
-# 1. Visão Geral
-
+1. Visão Geral
 O SmartCheck é uma solução de automação desenvolvida em Python para otimizar o processo de conciliação EBTA. O sistema cruza dados de planilhas de pendências com uma base SQL, realiza o matching das informações e automatiza o envio de notificações via Outlook.
 
-# 2. Arquitetura do Sistema
+3. Arquitetura do Sistema
 
-O projeto segue uma arquitetura modular para facilitar manutenção, escalabilidade e organização:
+📁 Estrutura
+  •	inputs/ → arquivos de entrada (pendências, base de emails, depara) 
+  •	outputs/ 
+    o	Corretos/ → conciliados 
+    o	Incorretos/ → pendências não tratadas 
+  •	logs/ → histórico de execução
+  
+📦 Camadas
+  •	src/extract → leitura de dados (Excel + SQL) 
+  •	src/transform → tratamento e padronização 
+  •	src/matching → motor de conciliação 
+  •	src/export → geração de arquivos formatados 
+  •	src/notify → envio de e-mails 
+  •	src/log → rastreabilidade e auditoria 
+  •	src/interface → UI (CustomTkinter) 
+  •	src/config → paths e controle de ambiente
+  •	src/main → orquestração
 
-•	inputs/base_clientes: Base de clientes utilizada no processamento.
+4. Controle de Ambiente
+  •	BASE_DIR → recursos internos 
+  •	EXEC_DIR → execução (outputs/logs) 
+Permite execução como .py ou .exe.
 
-•	inputs/casos_pendencias: Arquivo de pendências do Bradesco.
+5. Estrutura de Entrada
+Arquivos esperados:
+inputs/
+    pendencias*.xlsx
+    Base_emails.xlsx
+    De_Para_*.xlsx
 
-•	inputs/de_para: Mapeamento de campos por cliente.
+6. Requisitos de Entrada
+📄 Planilha de Pendências
+Deve conter obrigatoriamente o padrão do bradesco em estrutura de colunas. Arquivos fora desse padrão gerarão erro de validação.
 
-•	outputs/arquivos de saída.
+7. Fluxo de Processamento
+  1.	Seleção de arquivos 
+  2.	Carregamento das bases 
+  3.	Tratamento dos dados 
+  4.	Geração de chaves 
+  5.	Execução do matching 
+  6.	Classificação 
+  7.	Geração de outputs 
+  8.	Registro de logs 
+  9.	Envio de e-mails
+  10. Motor de Conciliação
+  •	Matching sequencial:
+  •	K1 → Aut + Data + Valor 
+  •	K2 → nr_aut + Data + Valor 
+  •	K3 → Loc + Data + Valor 
+  •	K4 → Cartão + Data + Valor + Loc 
+  •	K5 → Cartão + Valor + Loc 
 
-•	src/extract: Ingestão de dados (SQL, Excel, bases auxiliares).
+10.	Regras:
+  •	Apenas chaves únicas 
+  •	Duplicadas são descartadas 
+  •	Primeiro match válido vence 
+  •	Log por tentativa
 
-•	src/transform: Tratamento e criação de chaves de matching.
+8. Regras Dinâmicas (De-Para)
+   
+Permite:
+  •	regras padrão 
+  •	regras por cliente 
+  •	override automático 
 
-•	src/matching: Motor de regras para cruzamento de dados.
+10. Classificação de Status
+  •	Ok 
+  •	Não Localizado 
+  •	Colunas com ausência de dados
 
-•	src/notify: Lógica de criticidade e envio de e-mails.
+11. Logs e Auditoria
+    
+Log Geral
+  •	quantidade por empresa 
+  •	status 
+  •	data execução 
+Log de Chaves
+  •	chave utilizada 
+  •	resultado 
+  •	data execução
+  
+13. Outputs
+  •	Conciliados.xlsx 
+  •	Pendências_EBTA.xlsx 
+Características:
+  •	layout formatado (OpenPyXL) 
+  •	filtros 
+  •	freeze panes 
+  •	ajuste automático
 
-•	src/interface: Interface gráfica em Tkinter.
+15. Interface
+  •	seleção de arquivos 
+  •	barra de progresso 
+  •	status em tempo real 
+  •	execução em thread 
+  •	feedback visual
 
-Em mapeamento de campos por cliente temos um cuidado maior de verificação, a mascara de colunas criada no arquivo vai corresponder onde cada informação está no banco. Temos clientes por exemplo que a informação do “centro de custo” fica na coluna de “infpolitica” no banco, para esses casos precisamos identificar qual a coluna correspondente para cada cliente. Toda informação que temos sobre as colunas estão alocadas no "depara" disponibilizado pelo time de conciliação.
+17. Envio de E-mails
+  •	envio para operação 
+  •	envio para diretoria (casos críticos) 
+Critério:
+  •	baseado em dias restantes
 
-# 3. Fluxo de Dados
+19. Regras Implícitas
+  •	'**********' → ausência válida 
+  •	datas → string 
+  •	cartão → últimos 3 dígitos 
+  •	valores → 2 casas decimais
 
-O processamento segue as seguintes etapas:
+21. Tratamento de Erros
+  •	arquivo aberto 
+  •	estrutura inválida 
+  •	erro SQL 
+  •	erro de execução
 
-•	Entrada de arquivos (pendências, base de e-mails e depara).
+23. Limitações
+  •	matching exato (sem fuzzy) 
+  •	duplicados ignorados 
+  •	dependência de estrutura
 
-•	Consulta SQL com dados dos últimos 2 meses.
-
-•	Geração de múltiplas chaves de matching.
-
-•	Execução do motor de conciliação.
-
-•	Geração de outputs (conciliados e pendentes).
-
-•	Envio de notificações por e-mail por escolha do usuário.
-
-Chaves de Matching:
-
-•	K1: Autorização + Data emissão + Valor
-
-•	K2: Autorização + 3 dígitos finais do cartão + Data emissão + Valor
-
-•	K3: Loc Cia + Data emissão + Valor
-
-•	K4: 3 dígitos finais do cartão + Data emissão + Valor + Loc Cia
-
-•	K5: 3 dígitos finais do cartão + Data emissão + Localizador
-
-# 4. Regras de Negócio
-
-Casos não conciliados e com informações ausentes são enviados para ajuste operacional via e-mail. As correções devem ser realizadas no sistema de origem (benner), assim no próximo processamento este caso não subirá como pendência.
-
-Caso os ajustes não sejam feitos dentro da data de corte do cliente, a fatura será fechada e os casos subirão em branco.
-
-Como está desenhado abaixo, casos com a data de corte < 0 serão encaminhados à diretoria, para que todos estejam a par do processo pendente.
-
-# Criticidade (Aging)
-
-Aging (Dias)	Status	Prioridade	Ação
-
-< 0	Crítico	Alta	Envio + Diretoria
-
-= 0	Urgente	Alta	Envio + Operação
-
-1 a 5	Alta	Média	Envio operação
-
-6 a 10	Média	Baixa	Acompanhamento
-
-> 10	Baixa	Rotina normal
-
-# 5. Dependências Principais
-Arquivo requirements contempla todas as dependências utilizadas.
-
-•	Pandas & Openpyxl: Manipulação de dados.
-
-•	python-dotenv: Busca de dados no .env.
-
-•	SQLAlchemy & pyodbc: Conexão com SQL Server.
-
-•	Pywin32: Integração com Outlook.
-
-•	CustomTkinter: Interface gráfica.
-
-Variáveis de Ambiente (.env)
-
-•	DB_Server;
-
-•	DB_Database;
-
-•	DB_User;
-
-•	DB_Password;
-
-•	Email_User;
-
-•	Email_Diretoria.
-
-# 6. Utilização
-
-•	Executar interface;
-
-•	Selecionar planilha de pendências (extraída do site/Bradesco);
-
-•	Selecione a Base de Clientes atualizada;
-
-•	Confirmar se deseja realizar o envio de e-mails ao final do processamento;
-
-•	Validar outputs gerados para conferir os resultados processados.
+25. Modos de Execução
+Interface
+.exe
+CLI
+python -m src.interface
+caminho variável: python -m src.main --input1 arquivo1 --input2 arquivo2
