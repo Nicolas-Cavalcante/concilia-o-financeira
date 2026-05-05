@@ -29,8 +29,8 @@ def get_base_path():
 
 BASE_PATH = get_base_path()
 
-foto = tk.PhotoImage(file=str(BASE_PATH / "logo_fly_azul.png"))
-root.iconphoto(True, foto)
+#foto = tk.PhotoImage(file=str(BASE_PATH / "logo_fly_azul.png"))
+#root.iconphoto(True, foto)
 
     #==============================================
     # BUSCA ARQUIVO EMAILS AUTOMÁTICAMENTE E ALOCA NA FUNÇÃO
@@ -345,7 +345,7 @@ def tela_processamento(funcao_processamento):
 
     btn_abrir = ctk.CTkButton(
         buttons_frame,
-        text="Abrir arquivo",
+        text="Abrir Conciliados",
         width=180,
         height=35,
         corner_radius=5,
