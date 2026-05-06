@@ -29,11 +29,9 @@ from src.outputs_configs.layout import (
 # ⚙️ IMPORTAÇÃO DAS BIBLIOTECAS
 #==============================================
 
-from src import config
+from src.config import EXEC_DIR
 from datetime import datetime
-from uuid import uuid4
 from src import config
-from dotenv import load_dotenv
 import pandas as pd
 import os
 import argparse
@@ -44,7 +42,6 @@ import time
 
 def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle):
 
-    load_dotenv()
     nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
     id_execucao = nome_arquivo[-6:]
     data_execucao = datetime.now()

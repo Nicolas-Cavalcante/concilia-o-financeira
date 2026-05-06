@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+from dotenv import load_dotenv
 
 # ==============================
 # 🔹 BASE DO SISTEMA (para recursos internos, ex: logo)
@@ -14,8 +15,16 @@ BASE_DIR = get_base_path()
 # ==============================
 # 🔹 BASE DE EXECUÇÃO (onde roda o EXE)
 # ==============================
-EXEC_DIR = Path.cwd()
+EXEC_DIR = (
+    Path(sys.executable).parent
+    if getattr(sys, 'frozen', False)
+    else Path.cwd()
+)
 
+load_dotenv(EXEC_DIR / ".env")
+
+if not (EXEC_DIR / ".env").exists():
+    raise FileNotFoundError(".env não encontrado")
 # ==============================
 # 📁 OUTPUTS (sempre fora do exe)
 # ==============================
