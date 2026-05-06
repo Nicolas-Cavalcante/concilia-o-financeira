@@ -3,10 +3,10 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, Color
 
 
-# =========================
+# ==================================================
 # 📝 ESTE ARQUIVO É RESPONSÁVEL POR APLICAR TODA LÓGICA DE MATCHING ENTRE AS BASES, CRIAÇÃO DE STATUS E CRIAÇÃO
 # DOS ARQUIVOS FINAIS.
-# =========================
+# ==================================================
 
 
 def executar_matching(df_planilha, df_sql, df_depara):

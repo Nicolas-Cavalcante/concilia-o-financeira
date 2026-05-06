@@ -1,9 +1,11 @@
 SmartCheck - Documentação do Projeto
 
 1. Visão Geral
-O SmartCheck é uma solução de automação desenvolvida em Python para otimizar o processo de conciliação EBTA. O sistema cruza dados de planilhas de pendências com uma base SQL, realiza o matching das informações e automatiza o envio de notificações via Outlook.
+O SmartCheck é uma solução de automação desenvolvida em Python para otimizar o processo de conciliação EBTA. O sistema cruza dados de planilhas de pendências com uma base SQL, realiza o matching das informações e automatiza o envio de notificações via Outlook. 
 
-3. Arquitetura do Sistema
+deixe o .bat na raiz do projeto.
+
+2. Arquitetura do Sistema
 
 📁 Estrutura
   •	inputs/ → arquivos de entrada (pendências, base de emails, depara) 
@@ -23,23 +25,23 @@ O SmartCheck é uma solução de automação desenvolvida em Python para otimiza
   •	src/config → paths e controle de ambiente
   •	src/main → orquestração
 
-4. Controle de Ambiente
+3. Controle de Ambiente
   •	BASE_DIR → recursos internos 
   •	EXEC_DIR → execução (outputs/logs) 
 Permite execução como .py ou .exe.
 
-5. Estrutura de Entrada
+4. Estrutura de Entrada
 Arquivos esperados:
 inputs/
     pendencias*.xlsx
     Base_emails.xlsx
     De_Para_*.xlsx
 
-6. Requisitos de Entrada
+5. Requisitos de Entrada
 📄 Planilha de Pendências
 Deve conter obrigatoriamente o padrão do bradesco em estrutura de colunas. Arquivos fora desse padrão gerarão erro de validação.
 
-7. Fluxo de Processamento
+6. Fluxo de Processamento
   1.	Seleção de arquivos 
   2.	Carregamento das bases 
   3.	Tratamento dos dados 
@@ -57,7 +59,7 @@ Deve conter obrigatoriamente o padrão do bradesco em estrutura de colunas. Arqu
   •	K4 → Cartão + Data + Valor + Loc 
   •	K5 → Cartão + Valor + Loc 
 
-10.	Regras:
+7.	Regras:
   •	Apenas chaves únicas 
   •	Duplicadas são descartadas 
   •	Primeiro match válido vence 
@@ -70,12 +72,12 @@ Permite:
   •	regras por cliente 
   •	override automático 
 
-10. Classificação de Status
+9. Classificação de Status
   •	Ok 
   •	Não Localizado 
   •	Colunas com ausência de dados
 
-11. Logs e Auditoria
+10. Logs e Auditoria
     
 Log Geral
   •	quantidade por empresa 
@@ -86,7 +88,7 @@ Log de Chaves
   •	resultado 
   •	data execução
   
-13. Outputs
+11. Outputs
   •	Conciliados.xlsx 
   •	Pendências_EBTA.xlsx 
 Características:
@@ -95,37 +97,37 @@ Características:
   •	freeze panes 
   •	ajuste automático
 
-15. Interface
+12. Interface
   •	seleção de arquivos 
   •	barra de progresso 
   •	status em tempo real 
   •	execução em thread 
   •	feedback visual
 
-17. Envio de E-mails
+13. Envio de E-mails
   •	envio para operação 
   •	envio para diretoria (casos críticos) 
 Critério:
   •	baseado em dias restantes
 
-19. Regras Implícitas
+14. Regras Implícitas
   •	'**********' → ausência válida 
   •	datas → string 
   •	cartão → últimos 3 dígitos 
   •	valores → 2 casas decimais
 
-21. Tratamento de Erros
+15. Tratamento de Erros
   •	arquivo aberto 
   •	estrutura inválida 
   •	erro SQL 
   •	erro de execução
 
-23. Limitações
+16. Limitações
   •	matching exato (sem fuzzy) 
   •	duplicados ignorados 
   •	dependência de estrutura
 
-25. Modos de Execução
+17. Modos de Execução
 Interface
 .exe
 CLI
