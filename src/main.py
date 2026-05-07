@@ -99,6 +99,20 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
+        qtde_ausente_de_dados = (df_planilha['status'] == 'Colunas com ausência de dados').sum()
+        qtde_total = (
+            qtde_ok +
+            qtde_erro +
+            qtde_ausente_de_dados
+        )
+        if qtde_total > 0:
+
+            percentual_ok = qtde_ok / qtde_total
+
+        percentual_pendente = (
+            qtde_erro +
+            qtde_ausente_de_dados
+        ) / qtde_total
 
         if controle["cancelar"]:
             return
@@ -275,7 +289,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
     registrar_execucao_chaves(config.LOG_PATH, df_log_chaves)
     
-    return qtde_ok, qtde_erro
+    return percentual_ok, percentual_pendente
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

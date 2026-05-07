@@ -130,6 +130,14 @@ def abrir_arquivo():
     except:
         subprocess.call(["open", caminho])
 
+def abrir_arquivo_nl():
+    caminho_nl = Path.cwd() / "outputs" / "Incorretos" / "Pendências_EBTA.xlsx"
+
+    try:
+        os.startfile(caminho_nl)
+    except:
+        subprocess.call(["open", caminho_nl])
+
 #==============================================
 #🔧 3. POPUP DE PROCESSAMENTO DO CÓDIGO
 #==============================================
@@ -349,30 +357,30 @@ def tela_processamento(funcao_processamento):
         width=180,
         height=35,
         corner_radius=5,
-        fg_color="#50C480",
-        hover_color="#287C4B",  # 👈 hover automático
+        fg_color="#BDC3C7",
+        hover_color="#A6ACAF",  # 👈 hover automático
         text_color="white",
         command=lambda: abrir_arquivo()
     )
 
     #==============================================
-    # CRIA BOTÃO PARA FECHAR O ARQUIVO NO FINAL DO PROCESSAMENTO
+    # CRIA BOTÃO PARA ABRIR O ARQUIVO PENDENCIAS NO FINAL DO PROCESSAMENTO
     #==============================================
 
-    btn_fechar = ctk.CTkButton(
+    btn_abrir_nl = ctk.CTkButton(
         buttons_frame,
-        text="Fechar",
+        text="Abrir Pendentes",
         width=180,
         height=35,
         corner_radius=5,
         fg_color="#BDC3C7",
         hover_color="#A6ACAF",
         text_color="black",
-        command=root.destroy
+        command=lambda: abrir_arquivo_nl()
     )
 
     btn_abrir.pack(side="left", padx=8)
-    btn_fechar.pack(side="left", padx=8)
+    btn_abrir_nl.pack(side="left", padx=8)
 
     #==============================================
     # CRIA LABEL PARA O FINAL DO PROCESSAMENTO
@@ -511,7 +519,7 @@ def tela_processamento(funcao_processamento):
     def rodar():
         try:
             resultado = funcao_processamento(atualiza_status)
-            qtde_ok, qtde_erro = resultado
+            percentual_ok, percentual_pendente = resultado
 
             # Mostra sucesso 
             def mostrar_sucesso():
@@ -529,7 +537,7 @@ def tela_processamento(funcao_processamento):
                 )
 
                 resultado_label.configure(
-                    text=f"{qtde_ok} Conciliados | {qtde_erro} Não Localizados",
+                    text=f"{percentual_ok}¨% Conciliados | {percentual_pendente}% Pendentes",
                     text_color="#FFFFFF"
                 )
 
