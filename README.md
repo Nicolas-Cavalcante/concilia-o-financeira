@@ -20,7 +20,7 @@ deixe o .bat na raiz do projeto.
   •	src/matching → motor de conciliação 
   •	src/export → geração de arquivos formatados 
   •	src/notify → envio de e-mails 
-  •	src/log → rastreabilidade e auditoria 
+  •	src/log → rastreabilidade e auditoria
   •	src/interface → UI (CustomTkinter) 
   •	src/config → paths e controle de ambiente
   •	src/main → orquestração
@@ -37,10 +37,6 @@ inputs/
     Base_emails.xlsx
     De_Para_*.xlsx
 
-5. Requisitos de Entrada
-📄 Planilha de Pendências
-Deve conter obrigatoriamente o padrão do bradesco em estrutura de colunas. Arquivos fora desse padrão gerarão erro de validação.
-
 6. Fluxo de Processamento
   1.	Seleção de arquivos 
   2.	Carregamento das bases 
@@ -52,6 +48,8 @@ Deve conter obrigatoriamente o padrão do bradesco em estrutura de colunas. Arqu
   8.	Registro de logs 
   9.	Envio de e-mails
   10. Motor de Conciliação
+
+
   •	Matching sequencial:
   •	K1 → Aut + Data + Valor 
   •	K2 → nr_aut + Data + Valor 
@@ -71,6 +69,13 @@ Permite:
   •	regras padrão 
   •	regras por cliente 
   •	override automático 
+
+7. Tratamento de Dados
+  •	normalização
+  •	datas
+  •	cartão
+  •	Rloc Cia
+  •	Valores
 
 9. Classificação de Status
   •	Ok 

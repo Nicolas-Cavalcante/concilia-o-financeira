@@ -30,7 +30,7 @@ def carregar_planilha(path):
 input_path = None
 
 if not input_path:
-    pasta = Path(r"C:\Users\nicolas.cavalcante\OneDrive - BEFLY TRAVEL\Documentos\GitHub\projeto-conciliacao_ebta\inputs")
+    pasta = Path("inputs")
     arquivos = list(pasta.glob("*De_Para_campos_gerenciais_EBTA*.xlsx"))
 
     if not arquivos:
