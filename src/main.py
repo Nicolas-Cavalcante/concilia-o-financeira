@@ -100,6 +100,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
         qtde_ausente_de_dados = (df_planilha['status'] == 'Colunas com ausência de dados').sum()
+        
         qtde_total = (
             qtde_ok +
             qtde_erro +
@@ -107,13 +108,12 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         )
         if qtde_total > 0:
 
-            percentual_ok = qtde_ok / qtde_total
+            percentual_ok = round((qtde_ok / qtde_total) * 100, 2)
 
-        percentual_pendente = (
+        percentual_pendente = round(((
             qtde_erro +
             qtde_ausente_de_dados
-        ) / qtde_total
-
+        ) / qtde_total) * 100, 2)
         if controle["cancelar"]:
             return
 

@@ -11,6 +11,20 @@
     # ⚙️ AJUSTA MODELO FINAL APENAS COM CASOS CORRETOS
     # =========================
 
+def formatar_valor_brasileiro(df, colunas):
+    df = df.copy()
+
+    for coluna in colunas:
+        if coluna in df.columns:
+            df[coluna] = df[coluna].apply(
+                lambda x: str(x).replace('.', ',') if x != '' and x is not None else x
+            )
+
+    return df
+
+
+
+
 def montar_layout_conciliados(df):
     colunas = [
        "MatchID",
@@ -34,7 +48,7 @@ def montar_layout_conciliados(df):
         "Data Volta",
         "Passageiro",
         "Trecho Voado",
-        "Classe ",
+        "Classe",
         "Departamento",
         "Matricula",
         "Requisição",
@@ -52,7 +66,11 @@ def montar_layout_conciliados(df):
     for col in colunas:
         if col not in df.columns:
             df[col] = ''
-    return df[colunas].copy()
+
+    df_final = df[colunas].copy()
+    df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
+
+    return df_final
 
     # =========================
     # ⚙️ AJUSTA MODELO NÃO LOCALIZADO COM CASOS NÃO ENCONTRADOS E COLUNAS COM AUSÊNCIA DE DADOS
@@ -81,7 +99,7 @@ def montar_layout_nao_localizados(df):
         "Data Volta",
         "Passageiro",
         "Trecho Voado",
-        "Classe ",
+        "Classe",
         "Departamento",
         "Matricula",
         "Requisição",
@@ -102,4 +120,8 @@ def montar_layout_nao_localizados(df):
     for col in colunas:
         if col not in df.columns:
             df[col] = ''
-    return df[colunas].copy()
+    
+    df_final = df[colunas].copy()
+    df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
+
+    return df_final

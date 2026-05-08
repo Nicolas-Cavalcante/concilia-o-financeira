@@ -39,7 +39,7 @@ def carregar_sql():
 
    # ===== QUERY SQL =====
     query = f"""
-        SELECT
+    SELECT
             SO.nm_cliente,
             SO.nr_autorizacao_cartao,
             SO.AUTORIZACAOCARTAOAMEX,
@@ -65,7 +65,10 @@ def carregar_sql():
             SO.INFDIVISAO AS Departamento,
             SO.INFPOLITICA,
             SO.CONVIDADO,
-            SO.nm_emissor AS Emissor
+            SO.nm_emissor AS Emissor,
+            SO.sgl_classe,
+            SO.[Data Ida],
+            SO.vl_taxa_embarque
         FROM
         (SELECT
             DC.nm_cliente,
@@ -76,7 +79,7 @@ def carregar_sql():
             INFOS,
             CAST(id_nro_bilhete AS VARCHAR(50)) AS id_nro_bilhete,
             RIGHT(nr_cartao_mascarado, 3) AS nr_cartao_mascarado,
-            FORMAT(dt_movimento, 'yyyy-MM-dd') AS dt_movimento, 
+            FORMAT(CONVERT(date, dt_movimento), 'dd/MM/yyyy', 'pt-BR') AS dt_movimento, 
             CAST(
                 ISNULL(vl_online_cliente, 0) 
                 + ISNULL(vl_taxa_embarque, 0) 
@@ -92,7 +95,10 @@ def carregar_sql():
             INFDIVISAO,
             INFPOLITICA,
             CONVIDADO,
-            EM.nm_emissor
+            EM.nm_emissor,
+            DCV.sgl_classe,
+            FORMAT(CONVERT(date, dt_embarque), 'dd/MM/yyyy', 'pt-BR') AS [Data Ida],
+            vl_taxa_embarque
         FROM fato_aereo FA
             LEFT JOIN dim_cliente DC ON FA.id_cliente = DC.id_cliente
             LEFT JOIN dim_passageiro DP ON FA.id_passageiro = DP.id_passageiro 
@@ -100,14 +106,20 @@ def carregar_sql():
             LEFT JOIN dim_rota DR ON FA.id_rota = DR.id_rota
             LEFT JOIN dim_emissor EM ON FA.id_emissor = EM.id_emissor
             LEFT JOIN dim_tipo_pagamento DTP ON FA.id_tipo_pagamento = DTP.id_tipo_pagamento
+            LEFT JOIN dim_classe_venda DCV ON FA.id_classe_venda = DCV.id_classe_venda
             WHERE FA.id_divisao IN (2000, 7000)
             AND nr_cartao_mascarado is not null
             AND dt_movimento between '{data_inicial}' AND '{data_final}'
             ) SO
     """
-    print(f"buscando dados de {data_inicial} até {data_final}")
 
     df_sql = pd.read_sql(query, conn)
+
+    
+    mask_bilhete_numerico = df_sql['Bilhete'].str.fullmatch(r'\d{1,9}', na=False)
+    df_sql.loc[mask_bilhete_numerico, 'Bilhete'] = (
+        df_sql.loc[mask_bilhete_numerico, 'Bilhete'].str.zfill(10)
+    )
 
     conn.close()
 

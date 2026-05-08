@@ -10,6 +10,9 @@ from src.extract.pendencias import df_depara
 
 def tratar_dados(df):
 
+    #==============================================
+    # TRATA COLUNAS PARA CRIAÇÃO DE CHAVES E AJUSTES NO ARQUIVO FINAL
+    #==============================================
     col = df['Nome da Cia Aérea'].fillna('')
 
     rloc_asterisco = col.str.extract(r"\*([A-Z0-9]{6})")
@@ -31,6 +34,10 @@ def tratar_dados(df):
 
     df['RLOC_CIA_CORRETO'] = df['RLOC_CIA_CORRETO'].fillna('')
 
+    # Força asterisco nas colunas Classe e data ida, pois não vem formatado do bradesco
+    df['Classe'] = '**********'
+    df['Data Ida'] = '**********'
+
     df['Valor Total'] = df['Valor Total'].apply(
         lambda x: f"{x:.2f}" if pd.notnull(x) else x
     )
@@ -40,6 +47,28 @@ def tratar_dados(df):
     #    on='Nome da Empresa',
     #    how='left'
     #)
+
+    #==============================================
+    # CRIA COLUNA DE DATA DE FECHAMENTO, DIAS RESTANTES E SETA EMISSOR
+    # COMO VAZIO PARA PREENCHIMENTO POSTERIOR
+    #==============================================
+
+    data_execucao = pd.Timestamp.today().normalize()
+    hoje = pd.Timestamp.today().normalize()
+
+    df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
+    
+    df['Dias Restantes'] = (df['Data Fechamento Cartão'] - hoje).dt.days
+
+    df['Data Fechamento Cartão'] = df['Data Fechamento Cartão'].dt.strftime('%d/%m/%Y')
+
+    df['Data de Emissão'] = df['Data de Emissão'].dt.strftime('%d/%m/%Y')
+
+    df['Emissor'] = ''
+
+    #==============================================
+    # CRIA CHAVES DE CONCILIAÇÃO DO ARQUIVO
+    #==============================================
 
     # Cria Chave Aut + Data + Valor como KEY 1
     df['Chave Aut + Data + Valor'] = (
@@ -82,17 +111,5 @@ def tratar_dados(df):
         df['Nome da Empresa'].astype(str) +
         df['Chave Aut + Data + Valor'].astype(str)
     )
-
-
-
-    #Cria coluna data de fechamento
-    data_execucao = pd.Timestamp.today().normalize()
-    hoje = pd.Timestamp.today().normalize()
-
-    df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
-    df['Dias Restantes'] = (df['Data Fechamento Cartão'] - hoje).dt.days
-
-    df['Emissor'] = ''
-
 
     return df
