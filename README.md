@@ -13,6 +13,9 @@ deixe o .bat na raiz do projeto.
     o	Corretos/ → conciliados 
     o	Incorretos/ → pendências não tratadas 
   •	logs/ → histórico de execução
+
+🧾 Login
+  Os acessos estão incluídos no arquivo .env, caso a senha seja alterada, será necessário alterar no arquivo.
   
 📦 Camadas
   •	src/extract → leitura de dados (Excel + SQL) 

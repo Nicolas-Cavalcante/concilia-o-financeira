@@ -70,14 +70,17 @@ def executar_matching(df_planilha, df_sql, df_depara):
         'Ticket': 'Bilhete',
         'Passageiro': 'Nome do Passageiro',
         'Trecho Voado': 'Trecho',
-        'Centro de Custo': 'Centro de Custo',
+        'Centro de Custo': 'cod_centro_custo',
         'Departamento': 'Departamento',
         'Matricula': 'Matricula',
         'Requisição': 'OS',
         'Solicitante': 'Nome do Solicitante',
         'Aprovador': 'Aprovador',
         'Localizador': 'Localizador',
-        'Emissor': 'Emissor'
+        'Emissor': 'Emissor',
+        'Classe': 'sgl_classe',
+        'Data Ida': 'Data Ida',
+        'Taxa de Embarque': 'vl_taxa_embarque'
     }
 
 

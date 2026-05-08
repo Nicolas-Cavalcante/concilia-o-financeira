@@ -359,7 +359,7 @@ def tela_processamento(funcao_processamento):
         corner_radius=5,
         fg_color="#BDC3C7",
         hover_color="#A6ACAF",  # 👈 hover automático
-        text_color="white",
+        text_color="black",
         command=lambda: abrir_arquivo()
     )
 
