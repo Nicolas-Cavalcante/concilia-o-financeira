@@ -49,21 +49,50 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     try:
         # Extração
         if atualizar_status:
-            atualizar_status("Iniciando processo", 10)
+            atualizar_status(
+                "Iniciando processo",
+                10,
+                etapa=0,
+                log=("K1", "Arquivo de pendências carregado")
+                )
         df_planilha = carregar_planilha(input_path)
+        total_registros = len(df_planilha)
 
+        if atualizar_status:
+            atualizar_status(
+               "Pendências carregadas",
+                15,
+                etapa=0,
+                registros=total_registros,
+                log=("K1", f"{total_registros} registros lidos")
+            )
+     
         if controle["cancelar"]:
             return
 
         if atualizar_status:
-            atualizar_status("Carregando base de clientes", 20)
+            atualizar_status(
+                "Carregando base de clientes",
+                20,
+                etapa=1,
+                registros=total_registros,
+                log=("K2", "Base de e-mails carregada")
+            )
+
         df_base_email = carregar_base_email(input_path2)
 
         if controle["cancelar"]:
             return
 
         if atualizar_status:
-            atualizar_status("Carregando base interna", 35)
+            atualizar_status(
+                "Carregando base interna",
+                35,
+                etapa=2,
+                registros=total_registros,
+                log=("K3", "Consulta SQL concluída")
+            )
+            
         df_sql = carregar_sql()
 
         if controle["cancelar"]:
@@ -79,16 +108,35 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             raise ValueError("Base SQL vazia")
 
         if atualizar_status:
-            atualizar_status("Iniciando processo de conciliação", 65)
-            time.sleep(2.5)
+            atualizar_status(
+                "Iniciando processo de conciliação",
+                65,
+                etapa=3,
+                registros=total_registros,
+                log=("K4", "Tratando dados")
+            )
+
         df_planilha = tratar_dados(df_planilha)
 
         if controle["cancelar"]:
             return
 
-        atualizar_status("Executando conciliação", 75)
-        time.sleep(1.5)
-        df_conciliados_preenchido, df_nao_localizados, df_log_chaves = executar_matching(df_planilha, df_sql, df_depara)
+        # Matching
+        if atualizar_status:
+            atualizar_status(
+                "Executando conciliação",
+                75,
+                etapa=3,
+                registros=total_registros,
+                log=("K4", "Executando regras de matching")
+            )
+
+        df_conciliados_preenchido, df_nao_localizados, df_log_chaves = executar_matching(
+            df_planilha,
+            df_sql,
+            df_depara
+        )
+
         dias_para_corte = df_nao_localizados['Dias Restantes'].min()
 
         df_conciliados = montar_layout_conciliados(df_conciliados_preenchido)
@@ -96,28 +144,50 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         if controle["cancelar"]:
             return
-
+        
+        # Cálculo dinâmico
         qtde_ok = (df_planilha['status'] == 'Ok').sum()
         qtde_erro = (df_planilha['status'] == 'Não Localizado').sum()
-        qtde_ausente_de_dados = (df_planilha['status'] == 'Colunas com ausência de dados').sum()
-        
-        qtde_total = (
-            qtde_ok +
-            qtde_erro +
-            qtde_ausente_de_dados
-        )
+        qtde_ausente_de_dados = (
+            df_planilha['status'] == 'Colunas com ausência de dados'
+        ).sum()
+
+        qtde_total = qtde_ok + qtde_erro + qtde_ausente_de_dados
+
         if qtde_total > 0:
-
             percentual_ok = round((qtde_ok / qtde_total) * 100, 2)
+            percentual_pendente = round(
+                ((qtde_erro + qtde_ausente_de_dados) / qtde_total) * 100,
+                2
+            )
+        else:
+            percentual_ok = 0
+            percentual_pendente = 0
+        
+        # Atualiza cards com valores reais
+        if atualizar_status:
+            atualizar_status(
+                "Conciliação concluída",
+                85,
+                etapa=3,
+                registros=qtde_total,
+                ok=qtde_ok,
+                pendentes=qtde_erro + qtde_ausente_de_dados,
+                log=("K4", f"{qtde_ok} conciliados e {qtde_erro + qtde_ausente_de_dados} pendentes")
+            )
 
-        percentual_pendente = round(((
-            qtde_erro +
-            qtde_ausente_de_dados
-        ) / qtde_total) * 100, 2)
-        if controle["cancelar"]:
-            return
-
-        atualizar_status("Salvando arquivos nas pastas", 90)
+        # Exportação
+        if atualizar_status:
+            atualizar_status(
+                "Salvando arquivos nas pastas",
+                90,
+                etapa=4,
+                registros=qtde_total,
+                ok=qtde_ok,
+                pendentes=qtde_erro + qtde_ausente_de_dados,
+                log=("K5", "Arquivos exportados com sucesso")
+            )
+            
         # Saída
         salvar(
             df_final=df_conciliados,
@@ -173,9 +243,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         #  1. ENVIO OPERAÇÃO
         if enviar_email_flag:
-            if atualizar_status:
-                atualizar_status("Encaminhando e-mail para operação 📩", 93)
-
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=operacao,
@@ -200,12 +267,20 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     corpo=corpo_diretoria,
                     anexos=None
                 )
-
-            atualizar_status("Finalizando", 95)
-            time.sleep(1.5)
         
 
-            atualizar_status("", 100)
+            # Finalização
+        if atualizar_status:
+            atualizar_status(
+                "Finalizando",
+                100,
+                etapa=4,
+                registros=qtde_total,
+                ok=qtde_ok,
+                pendentes=qtde_erro + qtde_ausente_de_dados,
+                log=("K5", "Processamento concluído")
+            )
+
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================
