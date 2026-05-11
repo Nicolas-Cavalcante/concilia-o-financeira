@@ -42,9 +42,12 @@ def tratar_dados(df):
     df['Classe'] = '**********'
     df['Data Ida'] = '**********'
 
-    df['Valor Total'] = df['Valor Total'].apply(
+    # Cria Valor Total str para não alterar a configuração da coluna de valor original
+    df['Valor Total str'] = df['Valor Total'].apply(
         lambda x: f"{x:.2f}" if pd.notnull(x) else x
     )
+
+    df['Valor Total'] = df['Valor Total'].astype(float)
 
     #df['sigla_grupo'] = df.merge(
     #    df_depara,
@@ -90,35 +93,35 @@ def tratar_dados(df):
     df['Chave Aut + Data + Valor'] = (
         df['Autorização'].astype(str) +
         df['Data de Emissão'].astype(str) +
-        df['Valor Total']
+        df['Valor Total str']
     )
 
     # Cria Chave Aut + Data + Valor como KEY 2
     df['Chave nr_aut + Data + Valor'] = (
         df['Autorização'].astype(str) +
         df['Data de Emissão'].astype(str) +
-        df['Valor Total']
+        df['Valor Total str']
     )
 
     # Cria chave Cartão + Data + Valor como KEY 3
     df['Chave Loc Cia + Data + Valor'] = (
         df['RLOC_CIA_CORRETO'].astype(str) +
         df['Data de Emissão'].astype(str) +
-        df['Valor Total']
+        df['Valor Total str']
     )
 
     # Cria chave Cartão + Data + Valor + loc Cia como KEY 4
     df['Chave Cartão + Data + Valor + Loc Cia'] = (
         df['Cartão'].astype(str).str[-3:] +
         df['Data de Emissão'].astype(str) +
-        df['Valor Total'] +
+        df['Valor Total str'] +
         df['RLOC_CIA_CORRETO'].astype(str)
     )
 
     # Cria chave Cartão + Valor + Loc Cia como KEY 5
     df['Chave Cartão + Valor + Loc Cia'] = (
         df['Cartão'].astype(str).str[-3:] +
-        df['Valor Total'] +
+        df['Valor Total str'] +
         df['RLOC_CIA_CORRETO'].astype(str)
     )
 

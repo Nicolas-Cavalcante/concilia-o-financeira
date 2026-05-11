@@ -8,7 +8,9 @@ import sys
 
 import customtkinter as ctk
 
-# ── Cores da identidade Flytour ───────────────────────────────────────────────
+#==============================================
+# Cores da identidade Flytour
+#==============================================
 C_LARANJA       = "#C8721A"
 C_VERDE_BARRA   = "#2ECC71"
 C_LARANJA_S     = "#9B6B3A"   # laranja suave (subtítulos, relógio)
@@ -44,8 +46,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     abrir_resultado_fn  : callable(caminho) — abre arquivo no S.O.
     config              : módulo src.config com OUTPUT_CORRETOS / OUTPUT_INCORRETOS
     """
-
-    # ── limpa e configura janela ──────────────────────────────────────────────
+#==============================================
+# limpa e configura janela
+#==============================================
     for w in root.winfo_children():
         w.destroy()
     root.configure(fg_color=C_NAVY)
@@ -86,7 +89,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
         canvas.bind("<Configure>", redesenhar)
         root.after(0, redesenhar)
 
-    # ── estado interno ────────────────────────────────────────────────────────
+#==============================================
+# estado interno
+#==============================================
     estado = {
         "erro":          False,
         "animacao":      True,
@@ -98,7 +103,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
         "clock_id":      None,
     }
 
-    # ── painel central ────────────────────────────────────────────────────────
+#==============================================
+# painel central
+#==============================================
     painel = ctk.CTkFrame(
         root,
         width=720,
@@ -112,7 +119,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     painel.grid_propagate(False)
     painel.grid_columnconfigure(0, weight=1)
 
-    # ── linha 0: header ───────────────────────────────────────────────────────
+#==============================================
+# linha 0: header
+#==============================================
     header = ctk.CTkFrame(painel, fg_color="transparent")
     header.grid(row=0, column=0, sticky="ew", padx=36, pady=(28, 0))
     header.grid_columnconfigure(1, weight=1)
@@ -141,10 +150,14 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     )
     lbl_clock.grid(row=0, column=2)
 
-    # ── linha 1: separador ────────────────────────────────────────────────────
+#==============================================
+    # ── linha 1: separador
+#==============================================
     ctk.CTkFrame(painel, height=1, fg_color=C_BORDA).grid(row=1, column=0, sticky="ew", padx=0, pady=(14, 0))
 
-    # ── linha 2: status principal ─────────────────────────────────────────────
+#==============================================
+    # ── linha 2: status principal
+#==============================================
     lbl_status = ctk.CTkLabel(
         painel,
         text="Iniciando processo",
@@ -162,7 +175,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     )
     lbl_sub.grid(row=3, column=0, pady=(0, 0))
 
-    # ── linha 3: barra de progresso ───────────────────────────────────────────
+#==============================================
+    # ── linha 3: barra de progresso
+#==============================================
     prog_wrap = ctk.CTkFrame(painel, fg_color="transparent")
     prog_wrap.grid(row=4, column=0, sticky="ew", padx=36, pady=(16, 0))
     prog_wrap.grid_columnconfigure(0, weight=1)
@@ -185,7 +200,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     progressbar.configure(mode="indeterminate")
     progressbar.start()
 
-    # ── linha 4: indicadores de etapa ────────────────────────────────────────
+#==============================================
+    # ── linha 4: indicadores de etapa
+#==============================================
     etapas_frame = ctk.CTkFrame(painel, fg_color="transparent")
     etapas_frame.grid(row=5, column=0, sticky="ew", padx=36, pady=(16, 0))
     for i in range(5):
@@ -223,7 +240,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     for widget in etapas_frame.winfo_children():
         etapa_frames.append(widget)
 
-    # ── linha 5: métricas (visível durante execução) ──────────────────────────
+#==============================================
+    # ── linha 5: métricas (visível durante execução)
+#==============================================
     metrics_frame = ctk.CTkFrame(painel, fg_color="transparent")
     metrics_frame.grid(row=6, column=0, sticky="ew", padx=36, pady=(14, 0))
     for i in range(3):
@@ -244,7 +263,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     m_ok        = _metric_card(metrics_frame, 1, "CONCILIADOS")
     m_pend      = _metric_card(metrics_frame, 2, "PENDENTES")
 
-    # ── linha 6: log ao vivo ──────────────────────────────────────────────────
+#==============================================
+    # ── linha 6: log ao vivo
+#==============================================
     log_outer = ctk.CTkFrame(painel, fg_color=C_SURFACE, corner_radius=6, border_width=1, border_color=C_BORDA)
     log_outer.grid(row=7, column=0, sticky="ew", padx=36, pady=(12, 0))
     log_outer.grid_columnconfigure(0, weight=1)
@@ -281,7 +302,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
         for idx, lbl in enumerate(log_linhas):
             lbl.grid(row=idx, column=0, sticky="w")
 
-    # ── linha 7: cards de resultado (ocultos durante execução) ───────────────
+#==============================================
+    # ── linha 7: cards de resultado (ocultos durante execução)
+#==============================================
     resultado_frame = ctk.CTkFrame(painel, fg_color="transparent")
     # não colocamos no grid ainda — aparece só ao final
 
@@ -314,7 +337,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     r_ok_count,   r_ok_pct   = _result_card(resultado_frame, 0, "CONCILIADOS", C_VERDE, C_VERDE)
     r_pend_count, r_pend_pct = _result_card(resultado_frame, 1, "PENDENTES",   C_ROSA,  C_ROSA)
 
-    # ── linha 8: botões ───────────────────────────────────────────────────────
+#==============================================
+    # ── linha 8: botões
+#==============================================
     btns_exec  = ctk.CTkFrame(painel, fg_color="transparent")
     btns_exec.grid(row=9, column=0, pady=(16, 28))
 
@@ -338,7 +363,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             border_color="#4B5563"
         )
 
-    # ── animação de pontos ────────────────────────────────────────────────────
+#==============================================
+    # ── animação de pontos
+#==============================================
     lbl_pontos = ctk.CTkLabel(painel, text="", font=("Segoe UI", 13, "bold"), text_color=C_LARANJA, fg_color="transparent")
     lbl_pontos.grid(row=8, column=0, pady=(4, 0))
 
@@ -357,7 +384,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             root.after(260, loop)
         loop()
 
-    # ── relógio ───────────────────────────────────────────────────────────────
+#==============================================
+    # ── relógio
+#==============================================
     def _tick():
         estado["elapsed"] += 1
         m, s = divmod(estado["elapsed"], 60)
@@ -367,7 +396,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
     estado["clock_id"] = root.after(1000, _tick)
 
-    # ── animação suave da barra ───────────────────────────────────────────────
+#==============================================
+    # ── animação suave da barra
+#==============================================
     def _animar_barra():
         diff = estado["pct_alvo"] - estado["pct_atual"]
         if abs(diff) > 0.002:
@@ -386,7 +417,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             except tk.TclError:
                 pass
 
-    # ── atualizar indicador de etapa ──────────────────────────────────────────
+#==============================================
+    # ── atualizar indicador de etapa
+#==============================================
     def _set_etapa(idx, estado_etapa):
         frame = etapa_frames[idx]
         dot   = dot_labels[idx]
@@ -416,7 +449,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             dot.configure(text_color=C_DIMMED)
             nome.configure(text_color=C_MUTED)
 
-    # ── exibir erro ───────────────────────────────────────────────────────────
+#==============================================
+    # ── exibir erro
+#==============================================
     def _exibir_erro(mensagem, tipo="sistema"):
             """
             tipo='usuario' → laranja, orientação clara de o que fazer
@@ -499,7 +534,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             except tk.TclError:
                 pass
 
-    # ── callback de status (chamado do main.py) ───────────────────────────────
+#==============================================
+    # ── callback de status (chamado do main.py)
+#==============================================
     def atualiza_status(texto, progresso=None, etapa=None, log=None, registros=None, ok=None, pendentes=None):
         """
         Parâmetros opcionais além de texto/progresso:
@@ -550,7 +587,9 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
         root.after(0, update)
 
-    # ── thread de execução ────────────────────────────────────────────────────
+#==============================================
+    # ── thread de execução
+#==============================================
     def rodar():
         try:
             resultado = funcao_processamento(atualiza_status)

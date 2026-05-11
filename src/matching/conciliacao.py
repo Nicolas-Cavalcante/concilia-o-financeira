@@ -137,8 +137,7 @@ def executar_matching(df_planilha, df_sql, df_depara):
     # =========================
     # MATCH - FAZ LOOPING VALIDANDO ONDE HOUVE MATCH COM OS MAPAS E PREENCHE AS COLUNAS
     # =========================
-
-    print(df_planilha.dtypes)
+    
     df_planilha['teve_match'] = False
     df_planilha['chave_match'] = None
 
