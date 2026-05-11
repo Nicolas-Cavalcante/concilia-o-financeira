@@ -24,6 +24,8 @@ from src.outputs_configs.layout import (
     montar_layout_conciliados,
     montar_layout_nao_localizados
 )
+from src.erros import SmartCheckError, classificar_erro
+import traceback
 
 #==============================================
 # ⚙️ IMPORTAÇÃO DAS BIBLIOTECAS
@@ -56,6 +58,16 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 log=("K1", "Arquivo de pendências carregado")
                 )
         df_planilha = carregar_planilha(input_path)
+
+        # Valida se é o arquivo correto
+        colunas_esperadas_pendencias = ['Autorização', 'Valor Total', 'Nome da Empresa', 'Cartão']
+        colunas_faltando = [c for c in colunas_esperadas_pendencias if c not in df_planilha.columns]
+        if colunas_faltando:
+            raise SmartCheckError(
+                mensagem_usuario=f"Arquivo de pendências inválido. Verifique se selecionou o arquivo correto.\nColunas não encontradas: {', '.join(colunas_faltando)}",
+                tipo="usuario",
+            )
+
         total_registros = len(df_planilha)
 
         if atualizar_status:
@@ -80,6 +92,15 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
 
         df_base_email = carregar_base_email(input_path2)
+
+        # Valida base de e-mails
+        colunas_esperadas_email = ['E-mail Célula']
+        colunas_faltando = [c for c in colunas_esperadas_email if c not in df_base_email.columns]
+        if colunas_faltando:
+            raise SmartCheckError(
+                mensagem_usuario="Arquivo de e-mails inválido. Verifique se selecionou o arquivo correto.",
+                tipo="usuario",
+            )
 
         if controle["cancelar"]:
             return
@@ -137,8 +158,15 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             df_depara
         )
 
-        dias_para_corte = df_nao_localizados['Dias Restantes'].min()
+        # Cria não localizados email respeitando os dias que devem entrar para operação
+        df_nao_localizados_email = df_nao_localizados[
+             df_nao_localizados['Dias Restantes'] <= 15
+             ].copy()
 
+        # cria variavel dias_para_corte para considerar na próximas aplicações
+        dias_para_corte = df_nao_localizados_email['Dias Restantes'].min() \
+            if not df_nao_localizados_email.empty else None
+        
         df_conciliados = montar_layout_conciliados(df_conciliados_preenchido)
         df_nao_conciliado = montar_layout_nao_localizados(df_nao_localizados)
 
@@ -204,9 +232,11 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # =========================
 
         html_tabela = "<p>Sem pendências no momento.</p>"
-        if not df_nao_localizados.empty:
+        corpo_email = montar_corpo_email(html_tabela)
+
+        if not df_nao_localizados_email.empty:
             tabela_clientes = (
-                df_nao_localizados
+                df_nao_localizados_email
                 .groupby('Nome da Empresa')
                 .size()
                 .reset_index(name='Qtde Pendente')
@@ -256,7 +286,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             #  2. ENVIO DIRETORIA
             if existem_urgentes:
 
-                qtde_casos = (df_nao_localizados["Dias Restantes"] <= 5).sum()
+                qtde_casos = (df_nao_localizados["Dias Restantes"] <= -3).sum()
                 dias_min = df_nao_localizados['Dias Restantes'].min()
                 corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
 
@@ -284,14 +314,33 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================
+    #==============================================
+    # 🛠️ Exceção de erros
+    # Classifica o erro e relança como SmartCheckError
+    # para que a interface exiba a mensagem correta.
+    #==============================================
+    except SmartCheckError:
+        # Já classificado — apenas relança
+        status_execucao = "Erro"
+        raise
+
     except Exception as e:
-        print(f"Erro na execução: {e}")
         status_execucao = "Erro"
 
-        df_final = None
-        df_nao_localizados = None
+        info = classificar_erro(e)
 
-        raise e #Não permite que a informação apresentada no erro quebre
+        # Log técnico no terminal
+        print(f"\n{'='*60}")
+        print(f"[{info['tipo'].upper()}] {info['detalhe']}")
+        print(traceback.format_exc())
+        print(f"{'='*60}\n")
+
+        # Relança como SmartCheckError com mensagem amigável
+        raise SmartCheckError(
+            mensagem_usuario=info["mensagem"],
+            tipo=info["tipo"],
+            detalhe=info["detalhe"],
+        ) from e
     
     #==============================================
     # 📌 Carrega LOG de Excução detalhado com chave unica
