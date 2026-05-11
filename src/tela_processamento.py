@@ -9,18 +9,20 @@ import sys
 import customtkinter as ctk
 
 # ── Cores da identidade Flytour ───────────────────────────────────────────────
-C_LARANJA   = "#C8721A"
-C_LARANJA_S = "#9B6B3A"   # laranja suave (subtítulos, relógio)
-C_ROSA      = "#E91E8C"
-C_VERDE     = "#8DC63F"
-C_AMARELO   = "#E8A030"
-C_NAVY      = "#1A1F35"
-C_PAINEL    = "#141828"
-C_SURFACE   = "#1A1F35"
-C_BORDA     = "#334155"
-C_TEXT      = "#F8FAFC"
-C_MUTED     = "#CBD5E1" # controla o nome das etapas, subtítulos e labels secundários
-C_DIMMED    = "#94A3B8" # controla pontos quando a etapa ainda não foi iniciada
+C_LARANJA       = "#C8721A"
+C_VERDE_BARRA   = "#2ECC71"
+C_LARANJA_S     = "#9B6B3A"   # laranja suave (subtítulos, relógio)
+C_ROSA          = "#E91E8C"
+C_VERDE         = "#49BB37"
+C_AMARELO       = "#E8A030"
+C_NAVY          = "#1A1F35"
+C_ICON          = "#0B1955"
+C_PAINEL        = "#141828"
+C_SURFACE       = "#1A1F35"
+C_BORDA         = "#334155"
+C_TEXT          = "#F8FAFC"
+C_MUTED         = "#CBD5E1" # controla o nome das etapas, subtítulos e labels secundários
+C_DIMMED        = "#94A3B8" # controla pontos quando a etapa ainda não foi iniciada
 
 # Nomes das etapas exibidas nos indicadores
 ETAPAS = [
@@ -32,7 +34,7 @@ ETAPAS = [
 ]
 
 
-def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_resultado_fn, config):
+def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_resultado_fn, config, base_path=None):
     """
     Parâmetros
     ----------
@@ -49,16 +51,10 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     root.configure(fg_color=C_NAVY)
 
 
-
-    def get_base_path():
-        if getattr(sys, "frozen", False):
-            return Path(sys._MEIPASS)
-        return Path(__file__).resolve().parent.parent
-
-    BASE_PATH = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) \
-        else Path(__file__).resolve().parent.parent.parent
-    
-    caminho = BASE_PATH / "fundo_fly.png"
+    if base_path is not None:
+        caminho = Path(base_path) / "fundo_fly.png"
+    else:
+        caminho = Path(__file__).resolve().parent / "fundo_fly.png"
 
     if caminho.exists():
         bg_original = Image.open(caminho).convert("RGBA")
@@ -68,7 +64,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
         canvas = tk.Canvas(root, highlightthickness=0, bd=0)
         canvas.place(x=0, y=0, relwidth=1, relheight=1)
-        canvas.lower()
+        canvas.lower("all")
 
         def redesenhar(event=None):
             largura = max(canvas.winfo_width(), 1)
@@ -121,7 +117,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     header.grid(row=0, column=0, sticky="ew", padx=36, pady=(28, 0))
     header.grid_columnconfigure(1, weight=1)
 
-    icon_f = ctk.CTkFrame(header, width=32, height=32, corner_radius=7, fg_color=C_LARANJA)
+    icon_f = ctk.CTkFrame(header, width=32, height=32, corner_radius=7, fg_color=C_ICON)
     icon_f.grid(row=0, column=0, rowspan=2)
     icon_f.grid_propagate(False)
     ctk.CTkLabel(icon_f, text="✦", font=("Segoe UI", 13, "bold"), text_color="#FFFFFF").place(relx=0.5, rely=0.5, anchor="center")
@@ -137,7 +133,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
         header,
         text="00:00",
         font=("Segoe UI", 11),
-        text_color=C_LARANJA_S,
+        text_color=C_TEXT,
         fg_color=C_SURFACE,
         corner_radius=20,
         padx=10,
@@ -174,14 +170,14 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     lbl_etapa = ctk.CTkLabel(prog_wrap, text="—", font=("Segoe UI", 10, "bold"), text_color=C_MUTED, anchor="w")
     lbl_etapa.grid(row=0, column=0, sticky="w")
 
-    lbl_pct = ctk.CTkLabel(prog_wrap, text="0%", font=("Segoe UI", 11, "bold"), text_color=C_LARANJA, anchor="e")
+    lbl_pct = ctk.CTkLabel(prog_wrap, text="0%", font=("Segoe UI", 11, "bold"), text_color=C_VERDE, anchor="e")
     lbl_pct.grid(row=0, column=1, sticky="e")
 
     progressbar = ctk.CTkProgressBar(
         prog_wrap,
         height=5,
         corner_radius=3,
-        progress_color=C_LARANJA,
+        progress_color=C_VERDE_BARRA,
         fg_color=C_DIMMED,
     )
     progressbar.set(0)
@@ -266,14 +262,14 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     log_linhas = []   # lista de CTkLabel no log
     
     # descrição do log 
-    def _add_log(chave, msg):
+    def _add_log(msg):
         ts = time.strftime("%H:%M:%S")
         for lbl in log_linhas:
             lbl.configure(text_color=C_DIMMED)
         novo = ctk.CTkLabel(
             log_entries_frame,
-            text=f"{ts}   {chave} ▸ {msg}",
-            font=("Courier New", 9),
+            text=f"{ts}  ▸ {msg}",
+            font=("Segoe UI", 9),
             text_color=C_AMARELO,
             anchor="w",
         )
@@ -421,30 +417,87 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             nome.configure(text_color=C_MUTED)
 
     # ── exibir erro ───────────────────────────────────────────────────────────
-    def _exibir_erro(mensagem):
-        estado["erro"]     = True
-        estado["animacao"] = False
-        if estado["clock_id"]:
-            root.after_cancel(estado["clock_id"])
+    def _exibir_erro(mensagem, tipo="sistema"):
+            """
+            tipo='usuario' → laranja, orientação clara de o que fazer
+            tipo='sistema' → vermelho, orienta a contatar suporte
+            """
+            estado["erro"]     = True
+            estado["animacao"] = False
+            if estado["clock_id"]:
+                root.after_cancel(estado["clock_id"])
 
-        try: progressbar.stop()
-        except tk.TclError: pass
+            try:
+                progressbar.stop()
+            except tk.TclError:
+                pass
 
-        try:
-            lbl_status.configure(text="Erro no processamento", text_color="#EF4444")
-            lbl_sub.configure(text="verifique os arquivos e tente novamente")
-            lbl_pct.configure(text="Erro")
-            btns_exec.grid_remove()
+            # Cores por tipo
+            if tipo == "usuario":
+                cor_titulo  = "#F59E0B"   # âmbar — problema que o usuário resolve
+                cor_sub     = "#FCD34D"
+                cor_borda   = "#92400E"
+                cor_bg      = "#1C1200"
+                titulo      = "Ação necessária"
+            else:
+                cor_titulo  = "#EF4444"   # vermelho — erro interno
+                cor_sub     = "#FCA5A5"
+                cor_borda   = "#7F1D1D"
+                cor_bg      = "#1C0A0A"
+                titulo      = "Erro no processamento"
 
-            btn_voltar = ctk.CTkFrame(painel, fg_color="transparent")
-            btn_voltar.grid(row=9, column=0, pady=(16, 28))
-            _btn(btn_voltar, "← Voltar ao menu", "transparent", C_BORDA, C_MUTED, mostrar_menu_fn).pack()
+            try:
+                lbl_status.configure(text=titulo, text_color=cor_titulo)
+                lbl_sub.configure(text=mensagem[:90] + ("..." if len(mensagem) > 90 else ""), text_color=cor_sub)
+                lbl_pct.configure(text="!" if tipo == "usuario" else "Erro")
+                btns_exec.grid_remove()
+                metrics_frame.grid_remove()
+                log_outer.grid_remove()
 
-        except tk.TclError:
-            pass
+                # Caixa de detalhe inline
+                erro_box = ctk.CTkFrame(
+                    painel,
+                    fg_color=cor_bg,
+                    corner_radius=6,
+                    border_width=1,
+                    border_color=cor_borda,
+                )
+                erro_box.grid(row=7, column=0, sticky="ew", padx=36, pady=(8, 0))
+                erro_box.grid_columnconfigure(0, weight=1)
 
-        from tkinter import messagebox
-        messagebox.showerror("Erro", mensagem, parent=root)
+                icone = "⚠" if tipo == "usuario" else "✕"
+                ctk.CTkLabel(
+                    erro_box,
+                    text=f"{icone}  {titulo.upper()}",
+                    font=("Segoe UI", 9, "bold"),
+                    text_color=cor_sub,
+                    anchor="w",
+                ).grid(row=0, column=0, sticky="w", padx=12, pady=(10, 4))
+
+                ctk.CTkLabel(
+                    erro_box,
+                    text=mensagem,
+                    font=("Segoe UI", 11),
+                    text_color=cor_sub,
+                    anchor="w",
+                    wraplength=580,
+                    justify="left",
+                ).grid(row=1, column=0, sticky="w", padx=12, pady=(0, 12))
+
+                # Botão voltar
+                btn_voltar = ctk.CTkFrame(painel, fg_color="transparent")
+                btn_voltar.grid(row=9, column=0, pady=(16, 28))
+                _btn(
+                    btn_voltar,
+                    "← Voltar ao menu",
+                    "transparent",
+                    C_BORDA,
+                    C_MUTED,
+                    mostrar_menu_fn,
+                ).pack()
+
+            except tk.TclError:
+                pass
 
     # ── callback de status (chamado do main.py) ───────────────────────────────
     def atualiza_status(texto, progresso=None, etapa=None, log=None, registros=None, ok=None, pendentes=None):
@@ -476,10 +529,10 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
                     estado["etapa_atual"] = etapa
                     _set_etapa(etapa, "ativo")
                     lbl_etapa.configure(text=f"etapa {etapa + 1} de {len(ETAPAS)}")
-                    lbl_sub.configure(text=ETAPAS[etapa])
+                    #lbl_sub.configure(text=ETAPAS[etapa])
 
                 if log:
-                    _add_log(log[0], log[1])
+                    _add_log(log[1])
 
                 if registros is not None:
                     m_registros.configure(text=str(registros), text_color=C_TEXT)
@@ -570,13 +623,23 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
             root.after(0, mostrar_sucesso)
 
-        except PermissionError:
-            root.after(0, lambda: _exibir_erro(
-                "O arquivo está aberto. Feche o Excel e tente novamente."
-            ))
+        except PermissionError as e:
+            err_msg = "Um arquivo está aberto no Excel. Feche-o e execute novamente."
+            print(f"[USUARIO] {e}")
+            root.after(0, lambda m=err_msg: _exibir_erro(m, tipo="usuario"))
+ 
         except Exception as e:
+            # Verifica se é SmartCheckError (já classificado pelo main.py)
+            tipo      = getattr(e, "tipo", "sistema")
+            msg       = getattr(e, "mensagem_usuario", None) or str(e)
+            detalhe   = getattr(e, "detalhe", str(e))
+ 
             print(traceback.format_exc())
-            root.after(0, lambda: _exibir_erro(str(e)))
+            print(f"[{tipo.upper()}] {detalhe}")
+ 
+            err_msg  = msg
+            err_tipo = tipo
+            root.after(0, lambda m=err_msg: _exibir_erro(m, tipo="usuario"))
 
     _animar_pontos()
     root.after(80, lambda: threading.Thread(target=rodar, daemon=True).start())

@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from src.extract.pendencias import df_depara
 
@@ -34,6 +35,9 @@ def tratar_dados(df):
 
     df['RLOC_CIA_CORRETO'] = df['RLOC_CIA_CORRETO'].fillna('')
 
+    # Ajusta taxa de embarque para float, igualando dados entre df_sql x df_planilha
+    df['Taxa de Embarque'] = df['Taxa de Embarque'].astype(float)
+    
     # Força asterisco nas colunas Classe e data ida, pois não vem formatado do bradesco
     df['Classe'] = '**********'
     df['Data Ida'] = '**********'
@@ -56,8 +60,20 @@ def tratar_dados(df):
     data_execucao = pd.Timestamp.today().normalize()
     hoje = pd.Timestamp.today().normalize()
 
+    # Data de fechamento original
     df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
-    
+
+    # Ajusta para sexta se cair em fim de semana
+    # dayofweek: 5 = sábado, 6 = domingo
+    dia_semana = df['Data Fechamento Cartão'].dt.dayofweek
+        
+    df['Data Fechamento Cartão'] = df['Data Fechamento Cartão'] - pd.to_timedelta(
+        np.where(dia_semana == 5, 1,   # sábado → volta 1 dia (sexta)
+        np.where(dia_semana == 6, 2,   # domingo → volta 2 dias (sexta)
+        0)),                           # dia útil → não mexe
+        unit='D'
+    )
+
     df['Dias Restantes'] = (df['Data Fechamento Cartão'] - hoje).dt.days
 
     df['Data Fechamento Cartão'] = df['Data Fechamento Cartão'].dt.strftime('%d/%m/%Y')

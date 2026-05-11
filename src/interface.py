@@ -205,7 +205,7 @@ def _criar_header(painel, row=0):
     header.grid_columnconfigure(1, weight=1)
 
     icon_frame = ctk.CTkFrame(
-        header, width=38, height=38, corner_radius=8, fg_color="#1D9E75"
+        header, width=38, height=38, corner_radius=8, fg_color="#0B1955"
     )
     icon_frame.grid(row=0, column=0, rowspan=2)
     icon_frame.grid_propagate(False)
@@ -219,15 +219,15 @@ def _criar_header(painel, row=0):
         nome_frame, text=APP_NAME, font=("Segoe UI", 15, "bold"), text_color="#F9FAFB"
     ).pack(side="left")
     ctk.CTkLabel(
-        nome_frame, text="  Conciliação EBTA", font=("Segoe UI", 11), text_color="#5DCAA5"
+        nome_frame, text="  Conciliação EBTA", font=("Segoe UI", 11), text_color="#ffffff"
     ).pack(side="left")
 
     ctk.CTkLabel(
         header,
-        text="v1.0 · PRODUÇÃO",
-        font=("Courier New", 10),
-        text_color="#5DCAA5",
-        fg_color="#0F2A1E",
+        text="v1.0",
+        font=("Segoe UI", 10),
+        text_color="#ffffff",
+        fg_color="#1E293B",
         corner_radius=20,
         padx=10,
         pady=3,
@@ -243,7 +243,7 @@ def _criar_indicador_passos(painel, passo_atual, row):
     frame = ctk.CTkFrame(painel, fg_color="transparent")
     frame.grid(row=row, column=0, sticky="w", padx=36, pady=(18, 4))
 
-    cor_ativo   = "#5DCAA5"
+    cor_ativo   = "#5DCAA5" # #5DCAA5
     cor_feito   = "#1D9E75"
     cor_inativo = "#374151"
 
@@ -279,7 +279,7 @@ def _criar_indicador_passos(painel, passo_atual, row):
             text="✓" if estado == "feito" else str(numero),
             font=("Segoe UI", 10, "bold"),
             text_color=cor_num,
-        ).place(relx=0.5, rely=0.5, anchor="center")
+        ).pack(expand=True, anchor="center")
 
         ctk.CTkLabel(
             f, text=f"  {texto}", font=("Segoe UI", 12), text_color=cor_txt
@@ -344,16 +344,18 @@ def mostrar_menu():
         linha.grid_columnconfigure(1, weight=1)
 
         icone = ctk.CTkFrame(
-            linha, width=38, height=38, corner_radius=7, fg_color="#0F2A1E"
+            linha, width=42, height=42, corner_radius=7, fg_color="#1E293B"
         )
-        icone.grid(row=0, column=0, rowspan=2, padx=(18, 12))
-        icone.grid_propagate(False)
+        icone.grid(row=0, column=0, rowspan=2, padx=(18, 12), pady=15)
+
         ctk.CTkLabel(
             icone,
-            text="⊞" if chave == "pendencias" else "◉",
-            font=("Segoe UI", 16),
-            text_color="#5DCAA5",
-        ).place(relx=0.5, rely=0.5, anchor="center")
+            text="📋" if chave == "pendencias" else "📩",
+            font=("Segoe UI", 20),
+            #text_color="#5DCAA5",
+            height=42,
+            width=42
+        ).pack()
 
         ctk.CTkLabel(
             linha,
@@ -369,17 +371,18 @@ def mostrar_menu():
         lbl_caminho.grid(row=1, column=1, sticky="nw", pady=(0, 14))
         labels_caminho[chave] = lbl_caminho
 
+        # botões de seleção do arquivo
         ctk.CTkButton(
             linha,
             text="Selecionar",
             width=110,
             height=32,
             corner_radius=6,
-            fg_color="#0F2A1E",
-            hover_color="#1D4A35",
-            border_width=1,
-            border_color="#2E7D54",
-            text_color="#5DCAA5",
+            fg_color="#1E293B",         # Fundo normal
+            hover_color="#2D3F55",      # Fundo ao passar o mouse
+            border_width=1,               
+            border_color="#334155",     # borda
+            text_color="#94A3B8",       # texto
             font=("Segoe UI", 12),
             command=comando,
         ).grid(row=0, column=2, rowspan=2, padx=(12, 18))
@@ -413,8 +416,8 @@ def mostrar_menu():
         for chave, lbl in labels_caminho.items():
             caminho = arquivos_selecionados[chave]
             if caminho:
-                lbl.configure(text=caminho_curto(caminho), text_color="#5DCAA5")
-                lbl.master.configure(border_color="#2E7D54")
+                lbl.configure(text=caminho_curto(caminho), text_color="#F9F9F9")
+                lbl.master.configure(border_color="#64748B") # #2E7D54
             else:
                 lbl.configure(text="nenhum arquivo selecionado", text_color="#4B5563")
                 lbl.master.configure(border_color="#1F2937")
@@ -422,8 +425,8 @@ def mostrar_menu():
         pronto = bool(arquivos_selecionados["pendencias"] and arquivos_selecionados["emails"])
         btn_continuar.configure(state="normal" if pronto else "disabled")
         if pronto:
-            status_dot.configure(text_color="#1D9E75")
-            status_label.configure(text="pronto para continuar", text_color="#5DCAA5")
+            status_dot.configure(text_color="#9CA3AF")
+            status_label.configure(text="pronto para continuar", text_color="#9CA3AF")
         else:
             status_dot.configure(text_color="#374151")
             status_label.configure(
