@@ -115,6 +115,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
             
         df_sql = carregar_sql()
+        
 
         if controle["cancelar"]:
             return
@@ -266,7 +267,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # 📩 Chamada para E-mail
         #==============================================
 
-        existem_urgentes = (df_nao_localizados['Dias Restantes'] < 5).any() # Verifica casos urgentes
+        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 1).any() # Verifica casos urgentes
 
         operacao = definir_destinatarios(dias_para_corte, df_base_email)
         diretoria = os.getenv("Email_Diretoria").split(";")

@@ -11,16 +11,16 @@
     # ⚙️ AJUSTA MODELO FINAL APENAS COM CASOS CORRETOS
     # =========================
 
-def formatar_valor_brasileiro(df, colunas):
-    df = df.copy()
+#def formatar_valor_brasileiro(df, colunas):
+#    df = df.copy()
+#
+#    for coluna in colunas:
+#        if coluna in df.columns:
+#            df[coluna] = df[coluna].apply(
+#                lambda x: str(x).replace('.', ',') if x != '' and x is not None else x
+#            )
 
-    for coluna in colunas:
-        if coluna in df.columns:
-            df[coluna] = df[coluna].apply(
-                lambda x: str(x).replace('.', ',') if x != '' and x is not None else x
-            )
-
-    return df
+#    return df
 
 
 
@@ -68,7 +68,7 @@ def montar_layout_conciliados(df):
             df[col] = ''
 
     df_final = df[colunas].copy()
-    df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
+    #df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
 
     return df_final
 
@@ -122,6 +122,6 @@ def montar_layout_nao_localizados(df):
             df[col] = ''
     
     df_final = df[colunas].copy()
-    df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
+    #df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
 
     return df_final

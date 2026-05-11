@@ -396,7 +396,7 @@ def mostrar_menu():
     )
     status_dot.pack(side="left", padx=(0, 6))
     status_label = ctk.CTkLabel(
-        status_frame, text="", font=("Courier New", 11), text_color="#4B5563"
+        status_frame, text="", font=("Segoe UI", 11), text_color="#4B5563" # altera texto -> Pronto para continuar que fica ao iniciar o menu
     )
     status_label.pack(side="left")
 
@@ -564,7 +564,7 @@ def mostrar_confirmacao(enviar_email: bool):
         )
         ctk.CTkLabel(
             aviso,
-            text="E-mail será enviado para operação ao término. Casos urgentes (< 5 dias) também notificam a diretoria.",
+            text="E-mail será enviado para operação ao término do processamento. Casos urgentes com o fechamento abaixo ou igual a 1 dia também notificam a diretoria.",
             font=("Segoe UI", 11),
             text_color="#5DCAA5",
             wraplength=640,

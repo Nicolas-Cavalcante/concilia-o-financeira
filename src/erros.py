@@ -9,10 +9,10 @@ Cada erro retorna um dict com:
 """
 
 
-# ─────────────────────────────────────────────
+#==============================================
 #  ERROS DE USUÁRIO
 #  Problema que o próprio usuário pode resolver
-# ─────────────────────────────────────────────
+#==============================================
 _ERROS_USUARIO = [
     {
         "identificador": "Planilha vazia",
@@ -82,14 +82,24 @@ _ERROS_USUARIO = [
 ]
 
 
-# ─────────────────────────────────────────────
+#==============================================
 #  ERROS DE SISTEMA
 #  Problema no algoritmo — usuário não resolve
-# ─────────────────────────────────────────────
+#==============================================
 _ERROS_SISTEMA = [
     {
         "identificador": "KeyError",
         "mensagem": "Coluna esperada não encontrada no processamento. Contate o suporte.",
+        "tipo": "sistema",
+    },
+    {
+        "identificador": "08001",
+        "mensagem": "Falha na conexão com a base interna. Se estiver em casa, verifique sua VPN, caso esteja na rede da empresa, contate o suporte.",
+        "tipo": "sistema",
+    },
+       {
+        "identificador": "SQL Server inexistente ou acesso negado.",
+        "mensagem": "Falha na conexão com a base interna. Se estiver em casa, verifique sua VPN, caso esteja na rede da empresa, contate o suporte.",
         "tipo": "sistema",
     },
     {
@@ -135,9 +145,9 @@ _ERROS_SISTEMA = [
 ]
 
 
-# ─────────────────────────────────────────────
+#==============================================
 #  FUNÇÃO PRINCIPAL
-# ─────────────────────────────────────────────
+#==============================================
 
 def classificar_erro(exc: Exception) -> dict:
     """
