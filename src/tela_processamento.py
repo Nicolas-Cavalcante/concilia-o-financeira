@@ -14,7 +14,7 @@ import customtkinter as ctk
 C_LARANJA       = "#C8721A"
 C_VERDE_BARRA   = "#2ECC71"
 C_LARANJA_S     = "#9B6B3A"   # laranja suave (subtítulos, relógio)
-C_ROSA          = "#E91E8C"
+C_ROSA          = "#C12767"
 C_VERDE         = "#49BB37"
 C_AMARELO       = "#E8A030"
 C_NAVY          = "#1A1F35"
@@ -67,7 +67,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
         canvas = tk.Canvas(root, highlightthickness=0, bd=0)
         canvas.place(x=0, y=0, relwidth=1, relheight=1)
-        canvas.lower("all")
+        
 
         def redesenhar(event=None):
             largura = max(canvas.winfo_width(), 1)
@@ -88,6 +88,15 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
         canvas.bind("<Configure>", redesenhar)
         root.after(0, redesenhar)
+        
+        # função força a entrada do fundo_fly ao processar
+        def baixar_canvas():
+            try:
+                canvas.lower()
+            except tk.TclError:
+                pass
+
+        root.after(10, baixar_canvas)
 
 #==============================================
 # estado interno

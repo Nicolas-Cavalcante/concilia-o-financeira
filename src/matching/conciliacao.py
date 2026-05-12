@@ -1,13 +1,9 @@
 import pandas as pd
-import openpyxl
-from openpyxl.styles import Font, Alignment, Color
-
 
 # ==================================================
 # 📝 ESTE ARQUIVO É RESPONSÁVEL POR APLICAR TODA LÓGICA DE MATCHING ENTRE AS BASES, CRIAÇÃO DE STATUS E CRIAÇÃO
 # DOS ARQUIVOS FINAIS.
 # ==================================================
-
 
 def executar_matching(df_planilha, df_sql, df_depara):
 
@@ -83,7 +79,6 @@ def executar_matching(df_planilha, df_sql, df_depara):
         'Taxa de Embarque': 'vl_taxa_embarque'
     }
 
-
     regras_clientes = (
         df_depara
         .groupby('Cliente')
@@ -94,7 +89,6 @@ def executar_matching(df_planilha, df_sql, df_depara):
         .to_dict()
     )
 
-    
     def regras_finais(cliente, regras_padrao, regras_clientes):
 
         regras_finais = regras_padrao.copy()
