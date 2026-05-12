@@ -48,6 +48,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     id_execucao = nome_arquivo[-6:]
     data_execucao = datetime.now()
     status_execucao = "Sucesso"
+    usuario_execucao = os.getenv("USERNAME")
     arquivo_pendencias_email = None
     try:
         # Extração
@@ -380,6 +381,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     df_log['data_execucao'] = data_execucao
     df_log['celula'] = df_log['Nome da Empresa']
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
+    df_log['usuario'] = usuario_execucao
     
     df_log = df_log [
         [
@@ -389,7 +391,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             "incorretos",
             "corretos",
             "ausencia_de_dados",
-            "status_email"
+            "status_email",
+            "usuario"
         ]
     ]
 

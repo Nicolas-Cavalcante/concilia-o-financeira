@@ -61,7 +61,7 @@ DB_Database	Nome do banco de dados
 DB_User	Usuário de acesso ao banco (autenticação SQL Server)
 DB_Password	Senha de acesso ao banco
 Email_User	Conta de e-mail remetente (Outlook local configurado)
-Email_Diretoria	Destinatários para alertas críticos — múltiplos separados por ;
+Email_Diretoria	Destinatários para alertas críticos - múltiplos separados por ;
 
 Atenção: qualquer alteração de senha, servidor ou conta de e-mail exige atualização manual deste arquivo antes da próxima execução.
 
@@ -188,6 +188,7 @@ Log Detalhado - historico_execucao_detalhado.xlsx
 •	Célula / empresa
 •	Quantidade de registros corretos, incorretos e com ausência de dados
 •	Status do envio de e-mail
+•	usuario
 
 Log de Chaves - historico_execucao.xlsx
 •	Chave utilizada (K1 a K5)
