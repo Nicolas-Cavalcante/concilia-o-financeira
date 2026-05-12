@@ -9,7 +9,7 @@ from pathlib import Path
 # 📑 SALVA ARQUIVOS
 #==============================================
 
-def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_corretos, path_incorretos):
+def salvar(df_final, df_nao_localizados, df_nao_localizados_email, df_sql, df_planilha, path, path_corretos, path_incorretos):
 
     salvar_df_final_formatado(
         df_final,
@@ -19,15 +19,17 @@ def salvar(df_final, df_nao_localizados, df_sql, df_planilha, path, path_correto
         )
     
     df_nao_localizados.to_excel(path_incorretos / "Pendências_EBTA.xlsx", index=False)
+    df_nao_localizados_email.to_excel(path_incorretos / "Pendências_email.xlsx", index=False)
     #df_sql.to_excel(path / "df_sql.xlsx", index=False)
     #df_planilha.to_excel(path / "df_planilha.xlsx", index=False)
 
     # Esse caminho serve como base ao openpyxl para tratar o estilo na função abaixo
     df_nao_localizados_caminho = path_incorretos / "Pendências_EBTA.xlsx"
+    df_nao_localizados_email = path_incorretos / "Pendências_email.xlsx"
     #df_planilha= path / "df_planilha.xlsx"
     
     # 3. Aplica a formatação visual
-    aplicar_estilo_visual([df_nao_localizados_caminho])
+    aplicar_estilo_visual([df_nao_localizados_caminho, df_nao_localizados_email])
 
 
 #==============================================

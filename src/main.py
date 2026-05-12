@@ -48,6 +48,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     id_execucao = nome_arquivo[-6:]
     data_execucao = datetime.now()
     status_execucao = "Sucesso"
+    arquivo_pendencias_email = None
     try:
         # Extração
         if atualizar_status:
@@ -170,6 +171,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         
         df_conciliados = montar_layout_conciliados(df_conciliados_preenchido)
         df_nao_conciliado = montar_layout_nao_localizados(df_nao_localizados)
+        df_nao_conciliado_email = montar_layout_nao_localizados(df_nao_localizados_email)
 
         if controle["cancelar"]:
             return
@@ -218,11 +220,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
             
         # Saída
+        arquivo_pendencias_email = config.OUTPUT_INCORRETOS / "Pendências_email.xlsx"
+
         salvar(
             df_final=df_conciliados,
             df_nao_localizados=df_nao_conciliado,
             df_sql=df_sql,
             df_planilha=df_planilha,
+            df_nao_localizados_email=df_nao_conciliado_email,
             path=config.OUTPUT_BASE,
             path_corretos=config.OUTPUT_CORRETOS,
             path_incorretos=config.OUTPUT_INCORRETOS
@@ -280,7 +285,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 assunto="Casos não identificados - EBTA",
                 corpo=corpo_email,
                 anexos=[
-                    os.path.join(config.OUTPUT_INCORRETOS, "Pendências_EBTA.xlsx")
+                    str(arquivo_pendencias_email)
                 ]
             )
             
@@ -299,7 +304,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     anexos=None
                 )
         
-
             # Finalização
         if atualizar_status:
             atualizar_status(
@@ -311,7 +315,6 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 pendentes=qtde_erro + qtde_ausente_de_dados,
                 log=("K5", "Processamento concluído")
             )
-
     #==============================================
     # 🛠️ Exceção de erros
     #==============================================
@@ -342,6 +345,13 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             tipo=info["tipo"],
             detalhe=info["detalhe"],
         ) from e
+
+    finally:
+        if arquivo_pendencias_email and arquivo_pendencias_email.exists():
+            try:
+                arquivo_pendencias_email.unlink()
+            except OSError as e:
+                print(f"Não foi possível excluir o arquivo temporário do e-mail: {e}")
     
     #==============================================
     # 📌 Carrega LOG de Excução detalhado com chave unica
@@ -415,6 +425,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     registrar_execucao_chaves(config.LOG_PATH, df_log_chaves)
     
     return percentual_ok, percentual_pendente
+
+   
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
