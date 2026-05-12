@@ -245,10 +245,17 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             tabela_clientes = (
                 df_nao_localizados_email
                 .groupby('Nome da Empresa')
-                .size()
-                .reset_index(name='Qtde Pendente')
-                .sort_values(by='Qtde Pendente', ascending=False)
+                .agg(
+                    Qtde_Pendente=('Nome da Empresa', 'size'),
+                    Data_fechamento=('Data Fechamento Cartão', 'first'),
+                )
+                .reset_index()
+                .sort_values(by='Qtde_Pendente', ascending=False)
                 .head(10)
+                .rename(columns={
+                    'Qtde_Pendente':    'Qtde Pendente',
+                    'Data_fechamento':  'Data de Fechamento',
+                })
             )
 
             tabela_clientes.index.name=None

@@ -4,7 +4,6 @@ import traceback
 import time
 from PIL import Image, ImageOps, ImageTk
 from pathlib import Path
-import sys
 
 import customtkinter as ctk
 
@@ -88,7 +87,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
         canvas.bind("<Configure>", redesenhar)
         root.after(0, redesenhar)
-        
+
         # função força a entrada do fundo_fly ao processar
         def baixar_canvas():
             try:
