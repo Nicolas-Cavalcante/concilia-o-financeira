@@ -71,6 +71,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
 
         total_registros = len(df_planilha)
+      
 
         if atualizar_status:
             atualizar_status(
@@ -154,6 +155,15 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 registros=total_registros,
                 log=("K4", "Executando regras de matching")
             )
+        chave_sql = df_sql[df_sql['Chave Loc Cia + Data + Valor'].str.contains('YHP7YY')]['Chave Loc Cia + Data + Valor'].values[0]
+        chave_plan = df_planilha[df_planilha['Chave Loc Cia + Data + Valor'].str.contains('YHP7YY')]['Chave Loc Cia + Data + Valor'].values[0]
+
+        print(f"SQL     : '{chave_sql}'")
+        print(f"Planilha: '{chave_plan}'")
+        print(f"Iguais  : {chave_sql == chave_plan}")
+        print(f"Len SQL : {len(chave_sql)}")
+        print(f"Len Plan: {len(chave_plan)}")
+
 
         df_conciliados_preenchido, df_nao_localizados, df_log_chaves = executar_matching(
             df_planilha,

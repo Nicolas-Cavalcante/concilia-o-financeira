@@ -45,7 +45,7 @@ def carregar_sql():
             SO.AUTORIZACAOCARTAOAMEX,
             SO.tipo_pagamento,
             SO.loc_reserva AS Localizador,
-            SO.INFOS AS OS,
+            SO.OS,
             SO.id_nro_bilhete AS Bilhete,
             SO.nr_cartao_mascarado,
             SO.dt_movimento,
@@ -62,7 +62,7 @@ def carregar_sql():
             SO.ds_solicitante AS [Nome do Solicitante],
             SO.INFAPROVADOR AS Aprovador,
             SO.dsc_rota AS Trecho,
-            SO.INFDIVISAO AS Departamento,
+            SO.Departamento,
             SO.INFPOLITICA,
             SO.CONVIDADO,
             SO.nm_emissor AS Emissor,
@@ -92,7 +92,14 @@ def carregar_sql():
             DS.ds_solicitante,
             INFAPROVADOR,
             DR.dsc_rota,
-            INFDIVISAO,
+            CASE
+                WHEN FA.id_divisao = 2000 THEN INFDIVISAO
+                ELSE ds_departamento
+            END AS Departamento,
+            CASE
+                WHEN FA.id_divisao = 2000 THEN INFOS
+                ELSE nr_requisicao
+            END AS OS,
             INFPOLITICA,
             CONVIDADO,
             EM.nm_emissor,
@@ -114,7 +121,17 @@ def carregar_sql():
     """
 
     df_sql = pd.read_sql(query, conn)
-
+   
+    colunas_chave = [
+    'Chave Aut + Data + Valor',
+    'Chave nr_aut + Data + Valor',
+    'Chave Loc Cia + Data + Valor',
+    'Chave Cartão + Data + Valor + Loc Cia',
+    'Chave Cartão + Valor + Loc Cia',
+    'dt_movimento',
+    ]
+    
+    df_sql[colunas_chave] = df_sql[colunas_chave].astype(str)
     
     mask_bilhete_numerico = df_sql['Bilhete'].str.fullmatch(r'\d{1,9}', na=False)
     df_sql.loc[mask_bilhete_numerico, 'Bilhete'] = (
