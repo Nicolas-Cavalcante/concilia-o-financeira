@@ -33,6 +33,12 @@ def tratar_dados(df):
     df.loc[mask_cia, 'RLOC_CIA_CORRETO'] = df.loc[mask_cia, 'RLOC_CIA_TRATADO']
     df.loc[~mask_cia & mask_ticket, 'RLOC_CIA_CORRETO'] = df.loc[~mask_cia & mask_ticket, 'Ticket']
 
+    df['RLOC_CIA_CORRETO'] = np.where(
+        df['RLOC_CIA_CORRETO'] == '',
+        df['RLOC_CIA_TRATADO'],
+        df['RLOC_CIA_CORRETO']
+        )
+
     df['RLOC_CIA_CORRETO'] = df['RLOC_CIA_CORRETO'].fillna('')
 
     # Ajusta taxa de embarque para float, igualando dados entre df_sql x df_planilha
@@ -130,5 +136,5 @@ def tratar_dados(df):
         df['Nome da Empresa'].astype(str) +
         df['Chave Aut + Data + Valor'].astype(str)
     )
-
+   
     return df
