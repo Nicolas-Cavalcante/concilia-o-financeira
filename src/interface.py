@@ -22,6 +22,7 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
 
 root = ctk.CTk()
+enviar_email_var = tk.BooleanVar(value=False)
 
 
 def get_base_path():
@@ -327,7 +328,7 @@ def mostrar_menu():
     area.grid(row=row, column=0, sticky="ew", padx=36)
     area.grid_columnconfigure(0, weight=1)
     row += 1
-
+ 
     labels_caminho = {}
 
     def _criar_linha_arquivo(parent, r, titulo_linha, chave, comando):
@@ -387,8 +388,6 @@ def mostrar_menu():
             command=comando,
         ).grid(row=0, column=2, rowspan=2, padx=(12, 18))
 
-    enviar_email_var = tk.BooleanVar(value=False)
-
     status_frame = ctk.CTkFrame(painel, fg_color="transparent")
     status_frame.grid(row=row + 1, column=0, pady=(6, 4))
     status_dot = ctk.CTkLabel(
@@ -441,17 +440,8 @@ def mostrar_menu():
             arquivos_selecionados["pendencias"] = Path(arquivo)
             atualizar_estado()
 
-    def selecionar_emails():
-        arquivo = selecionar_arquivo(
-            "Selecione a base de e-mails", primeira_pasta_inputs("base")
-        )
-        if arquivo:
-            arquivos_selecionados["emails"] = Path(arquivo)
-            atualizar_estado()
-
     _criar_linha_arquivo(area, 0, "Arquivo de pendências", "pendencias", selecionar_pendencias)
-    _criar_linha_arquivo(area, 1, "Base de e-mails",       "emails",     selecionar_emails)
-
+  
     ctk.CTkFrame(painel, height=1, fg_color="#1F2937").grid(
         row=row, column=0, sticky="ew", padx=0, pady=(4, 0)
     )
@@ -586,6 +576,94 @@ def mostrar_confirmacao(enviar_email: bool):
                 "Erro", "Selecione os dois arquivos antes de executar.", parent=root
             )
             return
+
+        controle = {"cancelar": False}
+
+        # ── Popup de confirmação de e-mail ──────────────────────────────
+        popup = ctk.CTkToplevel(root)
+        popup.title("Confirmar envio de e-mail")
+        popup.resizable(False, False)
+        popup.grab_set()
+
+        largura, altura = 420, 210
+        popup.update_idletasks()
+        x = root.winfo_x() + (root.winfo_width()  - largura) // 2
+        y = root.winfo_y() + (root.winfo_height() - altura)  // 2
+        popup.geometry(f"{largura}x{altura}+{x}+{y}")
+        popup.configure(fg_color="#101827")
+
+        estado_email = {"confirmado": None}  # None = popup fechado sem decisão
+
+        if enviar_email:
+            icone_txt = "✉"
+            titulo_txt = "Enviar e-mail ao final?"
+            descricao_txt = "O envio de e-mail está ativado.\nDeseja confirmar o envio ao término da conciliação?"
+            texto_sim = "Sim, enviar  ✉"
+            texto_nao = "Não enviar"
+        else:
+            icone_txt = "🔕"
+            titulo_txt = "E-mail desativado"
+            descricao_txt = "O envio de e-mail está desativado.\nDeseja ativar o envio ao término da conciliação?"
+            texto_sim = "Não, continuar sem enviar"
+            texto_nao = "Ativar e enviar  ✉"
+
+        ctk.CTkLabel(
+            popup, text=icone_txt, font=("Segoe UI", 28)
+        ).pack(pady=(22, 4))
+
+        ctk.CTkLabel(
+            popup, text=titulo_txt, font=("Segoe UI", 14, "bold"), text_color="#F9FAFB"
+        ).pack()
+
+        ctk.CTkLabel(
+            popup, text=descricao_txt, font=("Segoe UI", 11),
+            text_color="#6B7280", justify="center"
+        ).pack(pady=(4, 16))
+
+        btns_popup = ctk.CTkFrame(popup, fg_color="transparent")
+        btns_popup.pack()
+
+        def ao_confirmar():
+            # mantém a intenção original
+            estado_email["confirmado"] = enviar_email
+            enviar_email_var.set(enviar_email)
+            popup.destroy()
+
+        def ao_inverter():
+            # inverte a decisão
+            novo = not enviar_email
+            estado_email["confirmado"] = novo
+            enviar_email_var.set(novo)
+            popup.destroy()
+
+        # Botão secundário (Não enviar) — vem primeiro no pack = fica à esquerda
+        ctk.CTkButton(
+            btns_popup, text=texto_nao, width=160, height=36, corner_radius=7,
+            fg_color="transparent",
+            hover_color="#1F2937",
+            border_width=1,
+            border_color="#334155",
+            text_color="#9CA3AF",
+            font=("Segoe UI", 12), command=ao_inverter,
+        ).pack(side="left", padx=(0, 10))
+
+        # Botão principal (Sim, enviar) — vem depois no pack = fica à direita, agora verde
+        ctk.CTkButton(
+            btns_popup, text=texto_sim, width=160, height=36, corner_radius=7,
+            fg_color="#1D9E75",
+            hover_color="#178A65",
+            text_color="#FFFFFF",
+            font=("Segoe UI", 12, "bold"), command=ao_confirmar,
+        ).pack(side="left")
+
+        popup.wait_window()
+
+        # Se o popup foi fechado sem escolha (X), aborta execução
+        if estado_email["confirmado"] is None:
+            return
+
+        enviar_definitivo = estado_email["confirmado"]
+        # ────────────────────────────────────────────────────────────────
 
         controle = {"cancelar": False}
 

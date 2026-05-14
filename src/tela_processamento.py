@@ -377,21 +377,6 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     lbl_pontos = ctk.CTkLabel(painel, text="", font=("Segoe UI", 13, "bold"), text_color=C_LARANJA, fg_color="transparent")
     lbl_pontos.grid(row=8, column=0, pady=(4, 0))
 
-    def _animar_pontos():
-        frames = [".  ", ".. ", "...", " .."]
-        idx = 0
-        def loop():
-            nonlocal idx
-            if not estado["animacao"]:
-                try: lbl_pontos.configure(text="")
-                except tk.TclError: pass
-                return
-            try: lbl_pontos.configure(text=frames[idx])
-            except tk.TclError: return
-            idx = (idx + 1) % len(frames)
-            root.after(260, loop)
-        loop()
-
 #==============================================
     # ── relógio
 #==============================================
@@ -491,7 +476,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
             try:
                 lbl_status.configure(text=titulo, text_color=cor_titulo)
-                lbl_sub.configure(text=mensagem[:90] + ("..." if len(mensagem) > 90 else ""), text_color=cor_sub)
+                #lbl_sub.configure(text=mensagem[:90] + ("..." if len(mensagem) > 90 else ""), text_color=cor_sub)
                 lbl_pct.configure(text="!" if tipo == "usuario" else "Erro")
                 btns_exec.grid_remove()
                 metrics_frame.grid_remove()
@@ -620,7 +605,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
                 _animar_barra()
 
                 lbl_status.configure(text="Processamento concluído", text_color=C_VERDE)
-                lbl_sub.configure(text=f"tempo total · {lbl_clock.cget('text')}")
+                #lbl_sub.configure(text=f"tempo total · {lbl_clock.cget('text')}")
                 lbl_etapa.configure(text="concluído")
                 lbl_pct.configure(text="100%")
                 lbl_pontos.configure(text="")
@@ -684,9 +669,8 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
             print(traceback.format_exc())
             print(f"[{tipo.upper()}] {detalhe}")
  
-            err_msg  = msg
-            err_tipo = tipo
-            root.after(0, lambda m=err_msg: _exibir_erro(m, tipo="usuario"))
+            #err_msg  = msg
+            #err_tipo = tipo
+            root.after(0, lambda m=msg, t=tipo: _exibir_erro(m, tipo=t))
 
-    _animar_pontos()
     root.after(80, lambda: threading.Thread(target=rodar, daemon=True).start())
