@@ -46,7 +46,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
     nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
     id_execucao = nome_arquivo[-6:]
-    data_execucao = datetime.now()
+    data_execucao = pd.Timestamp.today().normalize()
     status_execucao = "Sucesso"
     usuario_execucao = os.getenv("USERNAME")
     arquivo_pendencias_email = None
@@ -60,7 +60,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 log=("K1", "Arquivo de pendências carregado")
                 )
         df_planilha = carregar_planilha(input_path)
-
+        time.sleep(2.5)
         # Valida se é o arquivo correto
         colunas_esperadas_pendencias = ['Autorização', 'Valor Total', 'Nome da Empresa', 'Cartão']
         colunas_faltando = [c for c in colunas_esperadas_pendencias if c not in df_planilha.columns]
@@ -95,9 +95,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
 
         df_base_email = carregar_base_email(input_path2)
+        time.sleep(2.5)
 
         # Valida base de e-mails
-        colunas_esperadas_email = ['E-mail Célula']
+        colunas_esperadas_email = ['SQUADS']
         colunas_faltando = [c for c in colunas_esperadas_email if c not in df_base_email.columns]
         if colunas_faltando:
             raise SmartCheckError(
@@ -141,7 +142,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 log=("K4", "Tratando dados")
             )
 
-        df_planilha = tratar_dados(df_planilha)
+        df_planilha = tratar_dados(df_planilha, df_base_email)
 
         if controle["cancelar"]:
             return
@@ -236,38 +237,73 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         )
 
         # =========================
-        # CRIA TABELA PARA ENCAMINHAR NO CORPO DO EMAIL
+        # CRIA TABELA E ENVIO POR compID
         # =========================
 
-        html_tabela = "<p>Sem pendências no momento.</p>"
-        corpo_email = montar_corpo_email(html_tabela)
+        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -3).any()
+        gerente_rm = os.getenv("Email_Gerente_RM", "")
+        diretoria = os.getenv("Email_Diretoria").split(";")
 
-        if not df_nao_localizados_email.empty:
-            tabela_clientes = (
-                df_nao_localizados_email
-                .groupby('Nome da Empresa')
-                .agg(
-                    Qtde_Pendente=('Nome da Empresa', 'size'),
-                    Data_fechamento=('Data Fechamento Cartão', 'first'),
+        if enviar_email_flag and not df_nao_localizados_email.empty:
+
+            for comp_id in df_nao_localizados_email['Nº Cliente/COMP'].unique():
+
+                # Filtra casos deste compID
+                df_comp = df_nao_localizados_email[
+                    df_nao_localizados_email['Nº Cliente/COMP'] == comp_id
+                ]
+
+                # Busca emails na base
+                base_comp = df_base_email[
+                    df_base_email['Nº Cliente/COMP'] == comp_id
+                ]
+
+                #if base_comp.empty:
+                #    print(f"[AVISO] {comp_id.count()} clientes não foram encontrados na base de e-mails. Envio ignorado.")
+                #    continue
+
+                registro = base_comp.iloc[0]
+                
+                # Monta destinatário e cópia
+                to_email_raw = [registro['EMAIL_CELULA_TESTE']]
+
+                if pd.isna(to_email_raw) or str(to_email_raw).strip().lower() in ("nan", "none", ""):
+                #    print(f"[AVISO] compID {comp_id} sem e-mail de célula. Envio ignorado.")
+                    continue
+
+                to_email = [str(to_email_raw).strip()]
+
+                cc_emails = [
+                    registro.get('SUPERVISOR_TESTE'),
+                    registro.get('COORDENADOR_TESTE'),
+                    registro.get('GERENTE_TESTE'),
+                ]
+                cc_emails = [e for e in cc_emails if pd.notna(e) and str(e).strip() != ""]
+                
+                # Monta tabela do compID
+                tabela_comp = (
+                    df_comp
+                    .groupby('SQUADS')
+                    .agg(
+                        Qtde_Pendente=('Nome da Empresa', 'size'),
+                        Data_fechamento=('Data Fechamento Cartão', 'first'),
+                    )
+                    .reset_index()
+                    .sort_values(by='Qtde_Pendente', ascending=False)
+                    .rename(columns={
+                        'Qtde_Pendente':   'Qtde Pendente',
+                        'Data_fechamento': 'Data de Fechamento',
+                    })
                 )
-                .reset_index()
-                .sort_values(by='Qtde_Pendente', ascending=False)
-                .head(10)
-                .rename(columns={
-                    'Qtde_Pendente':    'Qtde Pendente',
-                    'Data_fechamento':  'Data de Fechamento',
-                })
-            )
+                tabela_comp.index.name = None
 
-            tabela_clientes.index.name=None
-
-            html_tabela = tabela_clientes.to_html(
-                index=False,
-                border=0,
-                justify='center'
+                html_tabela = tabela_comp.to_html(
+                    index=False,
+                    border=0,
+                    justify='center'
                 ).replace(
-                '<table',
-                '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
+                    '<table',
+                    '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
                 ).replace(
                     '<th',
                     '<th style="border:1px solid #ccc;padding:5px;background-color:#f2f2f2;"'
@@ -275,43 +311,131 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     '<td',
                     '<td style="border:1px solid #ccc;padding:5px;text-align:center;"'
                 )
-            corpo_email = montar_corpo_email(html_tabela)
 
-        #==============================================
-        # 📩 Chamada para E-mail
-        #==============================================
+                corpo_email = montar_corpo_email(html_tabela)
 
-        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 1).any() # Verifica casos urgentes
+                # Monta anexo filtrado por compID
+                df_anexo = montar_layout_nao_localizados(df_comp)
+                arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_{comp_id}.xlsx"
+                df_anexo.to_excel(arquivo_comp, index=False)
+                squad = tabela_comp['SQUADS'].iloc[0]
 
-        operacao = definir_destinatarios(dias_para_corte, df_base_email)
-        diretoria = os.getenv("Email_Diretoria").split(";")
+                try:
+                    enviar_email(
+                        email_origem=os.getenv("Email_User"),
+                        destinatarios=to_email,
+                        cc=cc_emails if cc_emails else None,
+                        assunto=f"Casos não identificados EBTA {squad}",
+                        corpo=corpo_email,
+                        anexos=[str(arquivo_comp)],
+                    )
+                finally:
+                    # Remove anexo temporário após envio
+                    try:
+                        arquivo_comp.unlink()
+                    except OSError:
+                        pass
 
-        #  1. ENVIO OPERAÇÃO
-        if enviar_email_flag:
+                # ENVIO GESTÃO ===================================
+                # Filtra casos deste compID
+
+        if enviar_email_flag and not df_nao_localizados_email.empty:
+
+                gestores_sem_email = 0
+                comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
+                base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
+
+                for gestor_email in base_do_dia['GERENTE_TESTE'].dropna().unique():
+
+                    if str(gestor_email).strip().lower() in ("nan", "none", ""):
+                        gestores_sem_email += 1
+                        continue
+
+                    comps_gestor = base_do_dia[
+                        base_do_dia['GERENTE_TESTE'] == gestor_email
+                    ]['Nº Cliente/COMP'].unique()
+
+                    df_gestor = df_nao_localizados_email[
+                        df_nao_localizados_email['Nº Cliente/COMP'].isin(comps_gestor)
+                    ]
+
+                    if df_gestor.empty:
+                        continue
+
+                    registro_gestor = base_do_dia[base_do_dia['GERENTE_TESTE'] == gestor_email]
+                    cc_gestor = []
+                    for _, row in registro_gestor.iterrows():
+                        for campo in ['SUPERVISOR_TESTE', 'COORDENADOR_TESTE']:
+                            val = row.get(campo)
+                            if pd.notna(val) and str(val).strip().lower() not in ("nan", "none", ""):
+                                cc_gestor.append(str(val).strip())
+                    cc_gestor = list(set(cc_gestor))
+
+                    tabela_gestor = (
+                        df_gestor
+                        .groupby('SQUADS')
+                        .agg(
+                            Qtde_Pendente=('Nome da Empresa', 'size'),
+                            Data_fechamento=('Data Fechamento Cartão', 'first'),
+                        )
+                        .reset_index()
+                        .sort_values(by='Qtde_Pendente', ascending=False)
+                        .rename(columns={
+                            'Qtde_Pendente':   'Qtde Pendente',
+                            'Data_fechamento': 'Data de Fechamento',
+                        })
+                    )
+                    tabela_gestor.index.name = None
+
+                    html_tabela = tabela_gestor.to_html(
+                        index=False, border=0, justify='center'
+                    ).replace(
+                        '<table', '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
+                    ).replace(
+                        '<th', '<th style="border:1px solid #ccc;padding:5px;background-color:#f2f2f2;"'
+                    ).replace(
+                        '<td', '<td style="border:1px solid #ccc;padding:5px;text-align:center;"'
+                    )
+
+                    corpo_email = montar_corpo_email(html_tabela)
+                    gestor_id = str(gestor_email).split("@")[0]
+                    df_anexo_gestor = montar_layout_nao_localizados(df_gestor)
+                    arquivo_gestor = config.OUTPUT_INCORRETOS / f"Pendencias_Gestor_{gestor_id}.xlsx"
+                    df_anexo_gestor.to_excel(arquivo_gestor, index=False)
+
+                    try:
+                        enviar_email(
+                            email_origem=os.getenv("Email_User"),
+                            destinatarios=[str(gestor_email).strip()],
+                            cc=cc_gestor if cc_gestor else None,
+                            assunto="Casos não identificados EBTA",
+                            corpo=corpo_email,
+                            anexos=[str(arquivo_gestor)],
+                        )
+                    finally:
+                        try:
+                            arquivo_gestor.unlink()
+                        except OSError:
+                            pass
+
+        # ENVIO DIRETORIA
+        if enviar_email_flag and existem_urgentes:
+
+            qtde_casos = (df_nao_localizados['Dias Restantes'] <= -3).sum()
+            dias_min = df_nao_localizados['Dias Restantes'].min()
+            corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
+
+            destinatarios_diretoria = diretoria.copy()
+            if gerente_rm:
+                destinatarios_diretoria.append(gerente_rm)
+
             enviar_email(
                 email_origem=os.getenv("Email_User"),
-                destinatarios=operacao,
-                assunto="Casos não identificados - EBTA",
-                corpo=corpo_email,
-                anexos=[
-                    str(arquivo_pendencias_email)
-                ]
+                destinatarios=destinatarios_diretoria,
+                assunto="⚠️ Pendências próximas ao fechamento",
+                corpo=corpo_diretoria,
+                anexos=None
             )
-            
-            #  2. ENVIO DIRETORIA
-            if existem_urgentes:
-
-                qtde_casos = (df_nao_localizados["Dias Restantes"] <= -3).sum()
-                dias_min = df_nao_localizados['Dias Restantes'].min()
-                corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
-
-                enviar_email(
-                    email_origem=os.getenv("Email_User"),
-                    destinatarios=diretoria,
-                    assunto="⚠️ Pendências próximas ao fechamento",
-                    corpo=corpo_diretoria,
-                    anexos=None
-                )
         
             # Finalização
         if atualizar_status:
@@ -369,7 +493,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     
     df_log = (
         df_planilha
-        .groupby('Nome da Empresa')['status']
+        .groupby('SQUADS')['status']
         .value_counts()
         .unstack(fill_value=0)
     )
@@ -385,9 +509,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         'Não Localizado': 'incorretos',
         'Colunas com ausência de dados': 'ausencia_de_dados'
     }).reset_index()
-    
+
     df_log['data_execucao'] = data_execucao
-    df_log['celula'] = df_log['Nome da Empresa']
+    df_log['celula'] = df_log['SQUADS']
+    df_log['Nome da Empresa'] = df_planilha['Nome da Empresa']
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
     df_log['usuario'] = usuario_execucao
     

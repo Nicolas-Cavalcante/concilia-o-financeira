@@ -84,6 +84,7 @@ def montar_layout_nao_localizados(df):
         "Nº Cliente/COMP",
         "Cartão",
         "Agência",
+        "SQUADS",
         "Nome da Empresa",
         "Autorização",
         "Data de Emissão",

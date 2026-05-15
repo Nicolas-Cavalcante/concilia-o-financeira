@@ -9,7 +9,7 @@ import pandas as pd
 def carregar_base_email(path):
     abas = pd.read_excel(path, sheet_name=None)
 
-    colunas_esperadas = {"Cliente", "Unidade"}
+    colunas_esperadas = {"Cliente Conciliadora", "SQUADS"}
     abas_analisadas = []
 
     for nome_aba, df in abas.items():
