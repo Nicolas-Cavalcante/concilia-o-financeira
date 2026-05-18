@@ -45,17 +45,15 @@ def montar_corpo_email(html_tabela):
     <p style="font-family: Calibri; font-size:11pt; color: #333333;">
     <p>Olá,</p>
 
-    <p>Identificamos pendências em registros do seu atendimento.</p>
+    <p>Este é o último alerta referente ao fechamento dos clientes abaixo.</p>
 
-    <p>Os casos apontados no arquivo não foram localizados no sistema ou estão com informações faltantes.
+    <p>Caso os dados não sejam regularizados, os campos permanecerão sem preenchimento na fatura do cliente, podendo gerar impactos financeiros para a Flytour, além de ruídos comerciais junto aos clientes.</p>
 
-    </p>É necessário verficar se a venda foi lançada, revisar e corrigir os campos sinalizados com asterisco (*) mencionados no arquivo e validar dentro do benner.
+    </p>Solicitamos a regularização ou inclusão ainda hoje, diretamente no Benner (não iremos considerar retornos via e-mail ou teams), considerando os campos obrigatórios do cliente (sinalizados com asterisco no arquivo).
     
-    </p>Caso os dados não sejam ajustados, os campos permanecerão sem informação na fatura do cliente.</p>
+    </p>Importante: todas as emissões da Flytour devem estar integradas no mesmo dia da emissão ou, em casos excepcionais de ajustes pontuais, em até 48 horas.</p>
 
-    </p>Após a correção, as transações serão atualizadas em até 24 horas.</p>
-
-    </p>Solicitamos a regularização o quanto antes para evitar impactos para o cliente.</p>
+    </p>O recebimento deste e-mail pela Squad indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
 
     <p><b>Resumo por Squad:</b><br>
     {html_tabela}

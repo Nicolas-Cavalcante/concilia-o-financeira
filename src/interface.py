@@ -672,7 +672,7 @@ def mostrar_confirmacao(enviar_email: bool):
             funcao_processamento=lambda atualiza_status: src.main.main(
                 input_pendencias,
                 input_emails,
-                enviar_email,
+                enviar_definitivo,
                 atualiza_status,
                 controle,
             ),

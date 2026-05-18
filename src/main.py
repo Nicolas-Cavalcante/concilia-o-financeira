@@ -240,29 +240,35 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # CRIA TABELA E ENVIO POR compID
         # =========================
 
-        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -3).any()
+        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -2).any()
         gerente_rm = os.getenv("Email_Gerente_RM", "")
         diretoria = os.getenv("Email_Diretoria").split(";")
 
         if enviar_email_flag and not df_nao_localizados_email.empty:
+            
+            squads_sem_email = 0
+            comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
+            base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
 
-            for comp_id in df_nao_localizados_email['Nº Cliente/COMP'].unique():
+            for squads_email in base_do_dia['EMAIL_CELULA_TESTE'].dropna().unique():
 
-                # Filtra casos deste compID
-                df_comp = df_nao_localizados_email[
-                    df_nao_localizados_email['Nº Cliente/COMP'] == comp_id
+                if str(squads_email).strip().lower() in ("nan", "none", ""):
+                    squads_sem_email += 1,
+                    continue
+
+                comps_squads = base_do_dia[
+                    base_do_dia['EMAIL_CELULA_TESTE'] == squads_email
+                ]['Nº Cliente/COMP'].unique()
+                
+                df_squad = df_nao_localizados_email[
+                    df_nao_localizados_email['Nº Cliente/COMP'].isin(comps_squads)
                 ]
 
-                # Busca emails na base
-                base_comp = df_base_email[
-                    df_base_email['Nº Cliente/COMP'] == comp_id
-                ]
-
-                #if base_comp.empty:
+                if df_squad.empty:
                 #    print(f"[AVISO] {comp_id.count()} clientes não foram encontrados na base de e-mails. Envio ignorado.")
-                #    continue
+                    continue
 
-                registro = base_comp.iloc[0]
+                registro = df_squad.iloc[0]
                 
                 # Monta destinatário e cópia
                 to_email_raw = [registro['EMAIL_CELULA_TESTE']]
@@ -282,7 +288,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 
                 # Monta tabela do compID
                 tabela_comp = (
-                    df_comp
+                    df_squad
                     .groupby('SQUADS')
                     .agg(
                         Qtde_Pendente=('Nome da Empresa', 'size'),
@@ -315,8 +321,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 corpo_email = montar_corpo_email(html_tabela)
 
                 # Monta anexo filtrado por compID
-                df_anexo = montar_layout_nao_localizados(df_comp)
-                arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_{comp_id}.xlsx"
+                df_anexo = montar_layout_nao_localizados(df_squad)
+                arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_{squads_email}.xlsx"
                 df_anexo.to_excel(arquivo_comp, index=False)
                 squad = tabela_comp['SQUADS'].iloc[0]
 
@@ -348,15 +354,15 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 for gestor_email in base_do_dia['GERENTE_TESTE'].dropna().unique():
 
                     if str(gestor_email).strip().lower() in ("nan", "none", ""):
-                        gestores_sem_email += 1
+                        gestores_sem_email += 1,
                         continue
 
-                    comps_gestor = base_do_dia[
+                    comps_squads = base_do_dia[
                         base_do_dia['GERENTE_TESTE'] == gestor_email
                     ]['Nº Cliente/COMP'].unique()
-
+                    
                     df_gestor = df_nao_localizados_email[
-                        df_nao_localizados_email['Nº Cliente/COMP'].isin(comps_gestor)
+                        df_nao_localizados_email['Nº Cliente/COMP'].isin(comps_squads)
                     ]
 
                     if df_gestor.empty:
@@ -417,7 +423,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                             arquivo_gestor.unlink()
                         except OSError:
                             pass
-
+        
         # ENVIO DIRETORIA
         if enviar_email_flag and existem_urgentes:
 
