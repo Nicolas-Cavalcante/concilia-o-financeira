@@ -46,7 +46,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
     nome_arquivo = Path(input_path).stem # nome do arquivo sem extensão
     id_execucao = nome_arquivo[-6:]
-    data_execucao = pd.Timestamp.today().normalize()
+    data_execucao = datetime.now()
     status_execucao = "Sucesso"
     usuario_execucao = os.getenv("USERNAME")
     arquivo_pendencias_email = None
@@ -60,7 +60,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 log=("K1", "Arquivo de pendências carregado")
                 )
         df_planilha = carregar_planilha(input_path)
-        time.sleep(2.5)
+
         # Valida se é o arquivo correto
         colunas_esperadas_pendencias = ['Autorização', 'Valor Total', 'Nome da Empresa', 'Cartão']
         colunas_faltando = [c for c in colunas_esperadas_pendencias if c not in df_planilha.columns]
@@ -95,10 +95,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             )
 
         df_base_email = carregar_base_email(input_path2)
-        time.sleep(2.5)
 
         # Valida base de e-mails
-        colunas_esperadas_email = ['SQUADS']
+        colunas_esperadas_email = ['E-mail Célula']
         colunas_faltando = [c for c in colunas_esperadas_email if c not in df_base_email.columns]
         if colunas_faltando:
             raise SmartCheckError(
@@ -142,7 +141,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 log=("K4", "Tratando dados")
             )
 
-        df_planilha = tratar_dados(df_planilha, df_base_email)
+        df_planilha = tratar_dados(df_planilha)
 
         if controle["cancelar"]:
             return
@@ -237,7 +236,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         )
 
         # =========================
-        # CRIA TABELA E ENVIO POR compID
+        # CRIA TABELA PARA ENCAMINHAR NO CORPO DO EMAIL
         # =========================
 
         existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -2).any()
@@ -301,15 +300,24 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         'Data_fechamento': 'Data de Fechamento',
                     })
                 )
-                tabela_comp.index.name = None
+                .reset_index()
+                .sort_values(by='Qtde_Pendente', ascending=False)
+                .head(10)
+                .rename(columns={
+                    'Qtde_Pendente':    'Qtde Pendente',
+                    'Data_fechamento':  'Data de Fechamento',
+                })
+            )
 
-                html_tabela = tabela_comp.to_html(
-                    index=False,
-                    border=0,
-                    justify='center'
+            tabela_clientes.index.name=None
+
+            html_tabela = tabela_clientes.to_html(
+                index=False,
+                border=0,
+                justify='center'
                 ).replace(
-                    '<table',
-                    '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
+                '<table',
+                '<table style="border-collapse:collapse;font-family:Calibri;font-size:11pt;"'
                 ).replace(
                     '<th',
                     '<th style="border:1px solid #ccc;padding:5px;background-color:#f2f2f2;"'
@@ -317,8 +325,11 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     '<td',
                     '<td style="border:1px solid #ccc;padding:5px;text-align:center;"'
                 )
+            corpo_email = montar_corpo_email(html_tabela)
 
-                corpo_email = montar_corpo_email(html_tabela)
+        #==============================================
+        # 📩 Chamada para E-mail
+        #==============================================
 
                 # Monta anexo filtrado por compID
                 df_anexo = montar_layout_nao_localizados(df_squad)
@@ -435,13 +446,32 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             if gerente_rm:
                 destinatarios_diretoria.append(gerente_rm)
 
+        #  1. ENVIO OPERAÇÃO
+        if enviar_email_flag:
             enviar_email(
                 email_origem=os.getenv("Email_User"),
-                destinatarios=destinatarios_diretoria,
-                assunto="⚠️ Pendências próximas ao fechamento",
-                corpo=corpo_diretoria,
-                anexos=None
+                destinatarios=operacao,
+                assunto="Casos não identificados - EBTA",
+                corpo=corpo_email,
+                anexos=[
+                    str(arquivo_pendencias_email)
+                ]
             )
+            
+            #  2. ENVIO DIRETORIA
+            if existem_urgentes:
+
+                qtde_casos = (df_nao_localizados["Dias Restantes"] <= -3).sum()
+                dias_min = df_nao_localizados['Dias Restantes'].min()
+                corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
+
+                enviar_email(
+                    email_origem=os.getenv("Email_User"),
+                    destinatarios=diretoria,
+                    assunto="⚠️ Pendências próximas ao fechamento",
+                    corpo=corpo_diretoria,
+                    anexos=None
+                )
         
             # Finalização
         if atualizar_status:
@@ -499,7 +529,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     
     df_log = (
         df_planilha
-        .groupby('SQUADS')['status']
+        .groupby('Nome da Empresa')['status']
         .value_counts()
         .unstack(fill_value=0)
     )
@@ -515,10 +545,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         'Não Localizado': 'incorretos',
         'Colunas com ausência de dados': 'ausencia_de_dados'
     }).reset_index()
-
+    
     df_log['data_execucao'] = data_execucao
-    df_log['celula'] = df_log['SQUADS']
-    df_log['Nome da Empresa'] = df_planilha['Nome da Empresa']
+    df_log['celula'] = df_log['Nome da Empresa']
     df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
     df_log['usuario'] = usuario_execucao
     
