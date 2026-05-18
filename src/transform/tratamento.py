@@ -9,7 +9,7 @@ from src.extract.pendencias import df_depara
 # CRIANDO NOVAS COLUNAS E CHAVES PARA CONCILIAÇÃO.
 # =========================
 
-def tratar_dados(df):
+def tratar_dados(df, df_email):
 
     #==============================================
     # TRATA COLUNAS PARA CRIAÇÃO DE CHAVES E AJUSTES NO ARQUIVO FINAL
@@ -55,11 +55,11 @@ def tratar_dados(df):
 
     df['Valor Total'] = df['Valor Total'].astype(float)
 
-    #df['sigla_grupo'] = df.merge(
-    #    df_depara,
-    #    on='Nome da Empresa',
-    #    how='left'
-    #)
+    df['SQUADS'] = df.merge(
+        df_email[['Nº Cliente/COMP', 'SQUADS']],
+        on='Nº Cliente/COMP',
+        how='left'
+    )['SQUADS']
 
     #==============================================
     # CRIA COLUNA DE DATA DE FECHAMENTO, DIAS RESTANTES E SETA EMISSOR

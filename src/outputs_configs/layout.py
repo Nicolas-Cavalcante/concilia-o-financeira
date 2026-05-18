@@ -84,6 +84,7 @@ def montar_layout_nao_localizados(df):
         "Nº Cliente/COMP",
         "Cartão",
         "Agência",
+        "SQUADS"
         "Nome da Empresa",
         "Autorização",
         "Data de Emissão",
@@ -124,4 +125,21 @@ def montar_layout_nao_localizados(df):
     df_final = df[colunas].copy()
     #df_final = formatar_valor_brasileiro(df_final, ['Valor Total'])
 
+    return df_final
+
+def montar_layout_df_gestores(df):
+    df_final = (
+        df
+        .groupby('SQUADS', 'Nome da Empresa')
+        .agg(
+            Qtde_pendente=('Nome da Empresa', 'size'),
+            Data_fechamento=('Data Fechamento Cartão', 'first'),
+        )
+    .reset_index()
+    .sort_values(by=['SQUADS', 'Qtde_Pendente'], ascending=[True, False])
+        .rename(columns={
+            'Qtde_Pendente':   'Qtde Pendente',
+            'Data_fechamento': 'Data de Fechamento',
+        })
+    )
     return df_final

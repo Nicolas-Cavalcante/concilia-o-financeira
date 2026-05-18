@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+from src.erros import SmartCheckError
 
 #==============================================
 # 📑 CARREGA BASE DE PENDêNCIAS
@@ -17,8 +18,8 @@ def carregar_planilha(path):
         if colunas_esperadas.issubset(df.columns):
             return df
         
-    raise ValueError(
-        "Arquivo fora do padrão esperado: nenhuma aba contém as colunas obrigatórias "
+    raise SmartCheckError(
+        "Arquivo de pendências fora do padrão esperado: nenhuma aba contém as colunas obrigatórias "
         f"{colunas_esperadas}. Abas encontradas {abas_analisadas_pendencia}"
     )
 
@@ -34,7 +35,7 @@ if not input_path:
     arquivos = list(pasta.glob("*De_Para_campos_gerenciais_EBTA*.xlsx"))
 
     if not arquivos:
-        raise ValueError("Nenhum arquivo .xslx encontrado na pasta inputs")
+        raise SmartCheckError("Nenhum arquivo .xslx encontrado na pasta inputs")
 
     input_path = max(arquivos, key=lambda f: f.stat().st_mtime)
 
