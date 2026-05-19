@@ -84,7 +84,7 @@ def montar_layout_nao_localizados(df):
         "Nº Cliente/COMP",
         "Cartão",
         "Agência",
-        "SQUADS"
+        "SQUADS",
         "Nome da Empresa",
         "Autorização",
         "Data de Emissão",
@@ -127,16 +127,20 @@ def montar_layout_nao_localizados(df):
 
     return df_final
 
-def montar_layout_df_gestores(df):
+    # =========================
+    # A função abaixo configura o layout do arquivo que será anexado no email de reporte aos gestores
+    # =========================
+
+def montar_layout_gestor(df):
     df_final = (
         df
-        .groupby('SQUADS', 'Nome da Empresa')
+        .groupby(['SQUADS', 'Nome da Empresa'])
         .agg(
-            Qtde_pendente=('Nome da Empresa', 'size'),
+            Qtde_Pendente=('Nome da Empresa', 'size'),
             Data_fechamento=('Data Fechamento Cartão', 'first'),
         )
-    .reset_index()
-    .sort_values(by=['SQUADS', 'Qtde_Pendente'], ascending=[True, False])
+        .reset_index()
+        .sort_values(by=['SQUADS', 'Qtde_Pendente'], ascending=[True, False])
         .rename(columns={
             'Qtde_Pendente':   'Qtde Pendente',
             'Data_fechamento': 'Data de Fechamento',

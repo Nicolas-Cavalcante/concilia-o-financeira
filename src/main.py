@@ -9,7 +9,7 @@ from src.extract.pendencias import df_depara
 from src.extract.base_email import carregar_base_email
 from src.transform.tratamento import tratar_dados
 from src.matching.conciliacao import executar_matching
-from src.export.salvar import salvar
+from src.export.salvar import (salvar, aplicar_estilo_visual)
 from src.notify.analises_email import (
     montar_corpo_diretoria,
     montar_corpo_email
@@ -23,7 +23,7 @@ from src.notify.email import enviar_email
 from src.outputs_configs.layout import (
     montar_layout_conciliados,
     montar_layout_nao_localizados,
-    montar_layout_df_gestores
+    montar_layout_gestor
 )
 from src.erros import SmartCheckError, classificar_erro
 import traceback
@@ -240,8 +240,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # =========================
         # ENVIO POR SQUAD (OPERAÇÃO)
         # =========================
- 
+
         existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -2).any()
+        nao_urgente = (df_nao_localizados_email['Dias Restantes'] >= 0).any()
         gerente_rm = os.getenv("Email_Gerente_RM", "")
         diretoria = os.getenv("Email_Diretoria").split(";")
  
@@ -315,7 +316,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 df_anexo = montar_layout_nao_localizados(df_squad)
                 arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_{squad_id}.xlsx"
                 df_anexo.to_excel(arquivo_comp, index=False)
- 
+                aplicar_estilo_visual([arquivo_comp]) # Aplica estilo no arquivo anexado no email
+
                 try:
                     enviar_email(
                         email_origem=os.getenv("Email_User"),
@@ -330,10 +332,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         arquivo_comp.unlink()
                     except OSError:
                         pass
- 
+            
             if squads_sem_email > 0:
                 print(f"[AVISO] {squads_sem_email} squad(s) ignoradas por ausência de e-mail na base.")
- 
+
         # =========================
         # ENVIO GESTÃO
         # =========================
@@ -374,14 +376,12 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     df_gestor
                     .groupby('SQUADS')
                     .agg(
-                        Qtde_Pendente=('Nome da Empresa', 'size'),
-                        Data_fechamento=('Data Fechamento Cartão', 'first'),
+                        Qtde_Pendente=('Nome da Empresa', 'size')
                     )
                     .reset_index()
                     .sort_values(by='Qtde_Pendente', ascending=False)
                     .rename(columns={
                         'Qtde_Pendente':   'Qtde Pendente',
-                        'Data_fechamento': 'Data de Fechamento',
                     })
                 )
                 tabela_gestor.index.name = None
@@ -399,8 +399,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 corpo_email = montar_corpo_email(html_tabela)
                 gestor_id = str(gestor_email).split("@")[0]
                 arquivo_gestor = config.OUTPUT_INCORRETOS / f"Pendencias_Gestor_{gestor_id}.xlsx"
-                df_anexo_gestor = montar_layout_df_gestores(arquivo_gestor)
+                df_anexo_gestor = montar_layout_gestor(df_gestor)
                 df_anexo_gestor.to_excel(arquivo_gestor, index=False)
+                aplicar_estilo_visual([arquivo_gestor]) # Aplica estilo no arquivo anexado no email
  
                 try:
                     enviar_email(

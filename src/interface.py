@@ -16,7 +16,7 @@ from src.tela_processamento import tela_processamento
 
 
 APP_NAME = "SmartCheck"
-WINDOW_TITLE = "SmartCheck - Conciliação EBTA"
+WINDOW_TITLE = ""
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")

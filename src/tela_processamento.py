@@ -143,7 +143,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
     nome_f.grid(row=0, column=1, sticky="w", padx=(10, 0))
     # Titulos do container
     ctk.CTkLabel(nome_f, text="SmartCheck", font=("Segoe UI", 14, "bold"), text_color=C_TEXT).pack(side="left")
-    ctk.CTkLabel(nome_f, text="  Conciliação EBTA", font=("Segoe UI", 10), text_color=C_LARANJA_S).pack(side="left")
+    #ctk.CTkLabel(nome_f, text="  Conciliação EBTA", font=("Segoe UI", 10), text_color=C_LARANJA_S).pack(side="left")
 
     # label tempo de execução
     lbl_clock = ctk.CTkLabel(
