@@ -679,6 +679,7 @@ def mostrar_confirmacao(enviar_email: bool):
             mostrar_menu_fn=mostrar_menu,
             abrir_resultado_fn=abrir_resultado,
             config=config,
+            base_path=BASE_PATH,
         )
 
     ctk.CTkButton(

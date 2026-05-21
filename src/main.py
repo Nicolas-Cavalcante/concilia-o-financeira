@@ -12,7 +12,8 @@ from src.matching.conciliacao import executar_matching
 from src.export.salvar import (salvar, aplicar_estilo_visual)
 from src.notify.analises_email import (
     montar_corpo_diretoria,
-    montar_corpo_email
+    montar_corpo_email,
+    montar_corpo_email_gestor
 )
 from src.log.logger import (
     registrar_execucao_chaves,
@@ -241,7 +242,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # ENVIO POR SQUAD (OPERAÇÃO)
         # =========================
 
-        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= -2).any()
+        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 2).any()
         nao_urgente = (df_nao_localizados_email['Dias Restantes'] >= 0).any()
         gerente_rm = os.getenv("Email_Gerente_RM", "")
         diretoria = os.getenv("Email_Diretoria").split(";")
@@ -323,7 +324,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         email_origem=os.getenv("Email_User"),
                         destinatarios=to_email,
                         cc=cc_emails if cc_emails else None,
-                        assunto=f"Casos não identificados EBTA - {registro_base.get('SQUADS', '')}",
+                        assunto=f"Pendências de Lançamento EBTA - Regularização Necessária - {registro_base.get('SQUADS', '')}",
                         corpo=corpo_email,
                         anexos=[str(arquivo_comp)],
                     )
@@ -396,7 +397,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     '<td', '<td style="border:1px solid #ccc;padding:5px;text-align:center;"'
                 )
  
-                corpo_email = montar_corpo_email(html_tabela)
+                corpo_email = montar_corpo_email_gestor(html_tabela)
                 gestor_id = str(gestor_email).split("@")[0]
                 arquivo_gestor = config.OUTPUT_INCORRETOS / f"Pendencias_Gestor_{gestor_id}.xlsx"
                 df_anexo_gestor = montar_layout_gestor(df_gestor)
@@ -408,7 +409,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         email_origem=os.getenv("Email_User"),
                         destinatarios=[str(gestor_email).strip()],
                         cc=cc_gestor if cc_gestor else None,
-                        assunto="Casos não identificados EBTA gestor",
+                        assunto="Pendências de Lançamento EBTA – Regularização Necessária",
                         corpo=corpo_email,
                         anexos=[str(arquivo_gestor)],
                     )
@@ -422,11 +423,11 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 print(f"[AVISO] {gestores_sem_email} gestor(es) ignorados por ausência de e-mail na base.")
 
         # ENVIO DIRETORIA
-        if enviar_email_flag and existem_urgentes:
+        if enviar_email_flag and existem_urgentes and not df_nao_localizados_email.empty:
 
-            qtde_casos = (df_nao_localizados['Dias Restantes'] <= -3).sum()
+            qtde_casos = (df_nao_localizados['Dias Restantes'] <= 2).sum()
             dias_min = df_nao_localizados['Dias Restantes'].min()
-            corpo_diretoria = montar_corpo_diretoria(qtde_casos, dias_min)
+            corpo_diretoria = montar_corpo_diretoria()
 
             destinatarios_diretoria = diretoria.copy()
             if gerente_rm:
@@ -435,7 +436,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             enviar_email(
                 email_origem=os.getenv("Email_User"),
                 destinatarios=destinatarios_diretoria,
-                assunto="⚠️ Pendências próximas ao fechamento",
+                assunto="Alerta de Clientes com Risco de Não Conciliação",
                 corpo=corpo_diretoria,
                 anexos=None
             )

@@ -45,33 +45,53 @@ def montar_corpo_email(html_tabela):
     <p style="font-family: Calibri; font-size:11pt; color: #333333;">
     <p>Olá,</p>
 
-    <p>Este é o último alerta referente ao fechamento dos clientes abaixo.</p>
+    <p>Seguem as pendências de lançamento de sua Squad no arquivo anexo.</p>
 
-    <p>Caso os dados não sejam regularizados, os campos permanecerão sem preenchimento na fatura do cliente, podendo gerar impactos financeiros para a Flytour, além de ruídos comerciais junto aos clientes.</p>
+    <p>Solicitamos a regularização dos casos enviados diretamente no Benner, considerando que os campos obrigatórios do cliente (sinalizados com asterisco no arquivo), bem como as informações de Autorização e Data de Emissão, devem ser corrigidos diretamente em sistema. Não serão considerados retornos via e-mail ou Teams.</p>
 
-    </p>Solicitamos a regularização ou inclusão ainda hoje, diretamente no Benner (não iremos considerar retornos via e-mail ou teams), considerando os campos obrigatórios do cliente (sinalizados com asterisco no arquivo).
+    </p>Pedimos que todos os casos estejam ajustados no sistema em até 24 hora anteriores à data de fechamento, a fim de evitar possíveis impactos financeiros para a Flytour, mitigando riscos relacionados ao não pagamento da fatura pelo cliente.
     
     </p>Importante: todas as emissões da Flytour devem estar integradas no mesmo dia da emissão ou, em casos excepcionais de ajustes pontuais, em até 48 horas.</p>
 
     </p>O recebimento deste e-mail pela Squad indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
+
+    <p><b>Resumo por cliente:</b><br>
+    {html_tabela}
+    
+    """
+
+def montar_corpo_email_gestor(html_tabela):
+
+    return f"""
+    <p style="font-family: Calibri; font-size:11pt; color: #333333;">
+    <p>Olá, Gestor(a)!</p>
+
+    <p>Seguem as pendências de lançamento de sua(s) Squad(s) no arquivo anexo.</p>
+
+    <p>Solicitamos a regularização dos casos enviados diretamente no Benner, considerando que os campos obrigatórios do cliente (sinalizados com asterisco no arquivo), bem como as informações de Autorização e Data de Emissão, devem ser corrigidos diretamente em sistema. Não serão considerados retornos via e-mail ou Teams.</p>
+
+    </p>Pedimos que todos os casos estejam lançados e/ou corrigidos em sistema em até 24 horas antes do prazo de fechamento, evitando impactos financeiros à Flytour.
+    
+    </p>Importante: todas as emissões da Flytour devem estar integradas no mesmo dia da emissão ou, em casos excepcionais de ajustes pontuais, em até 48 horas.</p>
+
+    </p>O recebimento deste e-mail pela Gestão indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
 
     <p><b>Resumo por Squad:</b><br>
     {html_tabela}
     
     """
 
-def montar_corpo_diretoria(qtde_casos, dias_min):
+def montar_corpo_diretoria():
 
     return f"""
-    <p>Prezados,</p>
+    <p>Olá,</p>
 
-    <p>Identificamos <b>{qtde_casos} pendências</b> com proximidade de fechamento.</p>
+    <p>Informamos, abaixo, a relação de clientes que se encontram em risco de receber casos sem conciliação em sua fatura, o que pode ocasionar impactos financeiros à Flytour devido ao risco de não pagamento pelo cliente.</p>
 
-    <p>O menor prazo atual é de <b>{dias_min} dias para o fechamento do cartão</b>.</p>
+    <p>Lembramos que as regularizações ou inserções devem ser realizadas em até 24 horas antes da data de fechamento do cliente, diretamente no Benner, considerando os dados gerenciais, além do número de autorização e data de emissão. Dessa forma, conseguiremos efetuar os envios dentro do prazo estipulado pelo banco.</p>
 
-    <p>Os casos foram encaminhados para operação e caso não forem ajustados irão sem informação na fatura do cliente</p>
+    <p>O recebimento deste e-mail indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
 
-    <p>Atualizaremos em caso de evolução relevante.</p>
     """
 
 

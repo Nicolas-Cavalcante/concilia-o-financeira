@@ -147,3 +147,24 @@ def montar_layout_gestor(df):
         })
     )
     return df_final
+
+    # =========================
+    # A função abaixo configura o layout do arquivo que será anexado no email de reporte aos gestores
+    # =========================
+
+def montar_layout_diretoria(df):
+    df_final = (
+        df
+        .groupby(['SQUADS', 'Nome da Empresa'])
+        .agg(
+            Qtde_Pendente=('Nome da Empresa', 'size'),
+            Data_fechamento=('Data Fechamento Cartão', 'first'),
+        )
+        .reset_index()
+        .sort_values(by=['SQUADS', 'Qtde_Pendente'], ascending=[True, False])
+        .rename(columns={
+            'Qtde_Pendente':   'Qtde Pendente',
+            'Data_fechamento': 'Data de Fechamento',
+        })
+    )
+    return df_final
