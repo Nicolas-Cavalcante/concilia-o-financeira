@@ -17,7 +17,8 @@ from src.notify.analises_email import (
 )
 from src.log.logger import (
     registrar_execucao_chaves,
-    registra_execucao_detalhada
+    registra_execucao_detalhada,
+    registrar_clientes_nao_encontrados
 )
 from src.notify.regra_envio import definir_destinatarios
 from src.notify.email import enviar_email
@@ -148,7 +149,9 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         if controle["cancelar"]:
             return
-
+        qtde_clientes_nao_encontrados = registrar_clientes_nao_encontrados(
+        config.LOG_CLIENTES_PATH, df_planilha
+)
         # Matching
         if atualizar_status:
             atualizar_status(
@@ -450,7 +453,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 registros=qtde_total,
                 ok=qtde_ok,
                 pendentes=qtde_erro + qtde_ausente_de_dados,
-                log=("K5", "Processamento concluído")
+                log=("K5", "Processamento concluído"),
+                clientes_nao_encontrados=qtde_clientes_nao_encontrados
             )
     #==============================================
     # 🛠️ Exceção de erros

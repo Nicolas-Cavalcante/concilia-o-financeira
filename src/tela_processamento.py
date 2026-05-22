@@ -545,7 +545,7 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 #==============================================
     # ── callback de status (chamado do main.py)
 #==============================================
-    def atualiza_status(texto, progresso=None, etapa=None, log=None, registros=None, ok=None, pendentes=None):
+    def atualiza_status(texto, progresso=None, etapa=None, log=None, registros=None, ok=None, pendentes=None, clientes_nao_encontrados=None):
         """
         Parâmetros opcionais além de texto/progresso:
           etapa     : int 0-4  → marca etapa como ativa
@@ -587,6 +587,50 @@ def tela_processamento(root, funcao_processamento, mostrar_menu_fn, abrir_result
 
                 if pendentes is not None:
                     m_pend.configure(text=str(pendentes), text_color=C_ROSA)
+
+                if clientes_nao_encontrados is not None and clientes_nao_encontrados > 0:
+                    def _popup_clientes():
+                        popup = ctk.CTkToplevel(root)
+                        popup.title("Atenção")
+                        popup.geometry("420x200")
+                        popup.resizable(False, False)
+                        popup.configure(fg_color=C_PAINEL)
+                        popup.grab_set()
+                        popup.update_idletasks()
+                        x = root.winfo_x() + (root.winfo_width() // 2) - (420 // 2)
+                        y = root.winfo_y() + (root.winfo_height() // 2) - (200 // 2)
+                        popup.geometry(f"420x200+{x}+{y}")
+
+                        ctk.CTkLabel(
+                            popup,
+                            text="⚠  Comp IDs não encontrados",
+                            font=("Segoe UI", 13, "bold"),
+                            text_color=C_AMARELO,
+                        ).pack(pady=(24, 8))
+
+                        ctk.CTkLabel(
+                            popup,
+                            text=f"{clientes_nao_encontrados} registro(s) com Nº Cliente/COMP\nausente ou não encontrado na base de e-mails.\n\nConsulte o log: historico_clientes_nao_encontrados.xlsx",
+                            font=("Segoe UI", 11),
+                            text_color=C_MUTED,
+                            justify="center",
+                        ).pack(pady=(0, 16))
+
+                        ctk.CTkButton(
+                            popup,
+                            text="Entendido",
+                            width=120,
+                            height=34,
+                            corner_radius=7,
+                            fg_color="transparent",
+                            hover_color=C_BORDA,
+                            text_color=C_TEXT,
+                            border_width=1,
+                            border_color=C_BORDA,
+                            command=popup.destroy,
+                        ).pack()
+
+                    root.after(600, _popup_clientes)
 
                 root.update_idletasks()
 

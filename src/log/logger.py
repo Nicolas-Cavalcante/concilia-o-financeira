@@ -114,3 +114,38 @@ def registra_execucao_detalhada(path, df_log):
         df_final = df_log
 
     df_final.to_excel(path, index=False)
+
+
+def registrar_clientes_nao_encontrados(path, df):
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    mask_vazio = df['Nº Cliente/COMP'].isna() | (df['Nº Cliente/COMP'].astype(str).str.strip() == '')
+    mask_nao_encontrado = df['SQUADS'].isna() & ~mask_vazio
+
+    df_log = pd.concat([
+        df[mask_vazio].assign(motivo='Nº Cliente/COMP vazio'),
+        df[mask_nao_encontrado].assign(motivo='Nº Cliente/COMP não encontrado no de-para')
+    ])
+
+    if df_log.empty:
+        return 0  # nenhum problema encontrado
+
+    df_log = df_log[['Nº Cliente/COMP', 'Nome da Empresa', 'motivo']].copy()
+    df_log = df_log.drop_duplicates(subset=['Nº Cliente/COMP'])
+    df_log['data_execucao'] = pd.Timestamp.today().normalize()
+
+    if os.path.exists(path):
+        try:
+            df_hist = pd.read_excel(path)
+            df_hist['data_execucao'] = pd.to_datetime(df_hist['data_execucao']).dt.normalize()
+            df_hist = df_hist[df_hist['data_execucao'] != df_log['data_execucao'].iloc[0]]
+            df_log = pd.concat([df_hist, df_log], ignore_index=True)
+        except PermissionError:
+            raise ValueError("O arquivo de log de clientes está aberto. Feche-o e execute novamente.")
+        except Exception as e:
+            print(f"[AVISO] Erro ao ler log de clientes: {e}")
+
+    df_log.to_excel(path, index=False)
+
+    return df[mask_vazio | mask_nao_encontrado]['Nº Cliente/COMP'].nunique()  # retorna a quantidade para o popup

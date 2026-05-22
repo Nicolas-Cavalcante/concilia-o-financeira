@@ -38,6 +38,7 @@ OUTPUT_INCORRETOS = OUTPUT_BASE / "Incorretos"
 LOG_DIR = EXEC_DIR / "logs"
 LOG_PATH = LOG_DIR / "historico_execucao.xlsx"
 LOG_DETALHE_PATH = LOG_DIR / "historico_execucao_detalhado.xlsx"
+LOG_CLIENTES_PATH = LOG_DIR / "clientes_nao_encontrados.xlsx"
 
 # ==============================
 # 📁 GARANTE QUE AS PASTAS EXISTEM
