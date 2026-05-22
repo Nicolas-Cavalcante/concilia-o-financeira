@@ -86,12 +86,16 @@ def montar_corpo_diretoria():
     return f"""
     <p>Olá,</p>
 
-    <p>Informamos, abaixo, a relação de clientes que se encontram em risco de receber casos sem conciliação em sua fatura, o que pode ocasionar impactos financeiros à Flytour devido ao risco de não pagamento pelo cliente.</p>
+    <p>Este é o último alerta referente ao fechamento dos clientes abaixo.</p>
 
-    <p>Lembramos que as regularizações ou inserções devem ser realizadas em até 24 horas antes da data de fechamento do cliente, diretamente no Benner, considerando os dados gerenciais, além do número de autorização e data de emissão. Dessa forma, conseguiremos efetuar os envios dentro do prazo estipulado pelo banco.</p>
-
-    <p>O recebimento deste e-mail indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
-
+    <p>Caso os dados não sejam regularizados, os campos permanecerão sem preenchimento na fatura do cliente, podendo gerar impactos financeiros para a Flytour, além de ruídos comerciais junto aos clientes.</p>
+    
+    <p>Solicitamos a regularização ou inclusão ainda hoje, diretamente no Benner (não iremos considerar retornos via e-mail ou teams), considerando os campos obrigatórios do cliente (sinalizados com asterisco no arquivo).</p>
+    
+    <p>Importante: todas as emissões da Flytour devem estar integradas no mesmo dia da emissão ou, em casos excepcionais de ajustes pontuais, em até 48 horas.</p>
+    
+    <p>O recebimento deste e-mail pela Squad indica que já estamos atuando de forma contingencial. Caso a regularização não ocorra dentro do prazo, contaremos com o apoio da Diretoria na gestão e divisão dos possíveis impactos.</p>
+ 
     """
 
 

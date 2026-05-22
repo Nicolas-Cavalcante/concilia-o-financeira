@@ -25,7 +25,8 @@ from src.notify.email import enviar_email
 from src.outputs_configs.layout import (
     montar_layout_conciliados,
     montar_layout_nao_localizados,
-    montar_layout_gestor
+    montar_layout_gestor,
+    montar_layout_diretoria
 )
 from src.erros import SmartCheckError, classificar_erro
 import traceback
@@ -247,7 +248,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
 
         existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 2).any()
         nao_urgente = (df_nao_localizados_email['Dias Restantes'] >= 0).any()
-        gerente_rm = os.getenv("Email_Gerente_RM", "")
+        gerente_rm = os.getenv("Email_RM").split(";")
         diretoria = os.getenv("Email_Diretoria").split(";")
  
         if enviar_email_flag and not df_nao_localizados_email.empty:
@@ -256,14 +257,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
             base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
  
-            for squads_email in base_do_dia['EMAIL_CELULA_TESTE'].dropna().unique():
+            for squads_email in base_do_dia['E-MAIL SQUADS'].dropna().unique():
  
                 if str(squads_email).strip().lower() in ("nan", "none", ""):
                     squads_sem_email += 1
                     continue
  
                 comps_squads = base_do_dia[
-                    base_do_dia['EMAIL_CELULA_TESTE'] == squads_email
+                    base_do_dia['E-MAIL SQUADS'] == squads_email
                 ]['Nº Cliente/COMP'].unique()
  
                 df_squad = df_nao_localizados_email[
@@ -274,15 +275,15 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     continue
  
                 registro_base = base_do_dia[
-                    base_do_dia['EMAIL_CELULA_TESTE'] == squads_email
+                    base_do_dia['E-MAIL SQUADS'] == squads_email
                 ].iloc[0]
  
                 to_email = [str(squads_email).strip()]
  
                 cc_emails = [
-                    registro_base.get('SUPERVISOR_TESTE'),
-                    registro_base.get('COORDENADOR_TESTE'),
-                    registro_base.get('GERENTE_TESTE'),
+                    registro_base.get('SUPERVISOR'),
+                    registro_base.get('COORDENADOR'),
+                    registro_base.get('GERENTE'),
                 ]
                 cc_emails = [
                     str(e).strip() for e in cc_emails
@@ -316,9 +317,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 )
  
                 corpo_email = montar_corpo_email(html_tabela)
-                squad_id = str(squads_email).split("@")[0]
                 df_anexo = montar_layout_nao_localizados(df_squad)
-                arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_{squad_id}.xlsx"
+                arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_Squad.xlsx"
                 df_anexo.to_excel(arquivo_comp, index=False)
                 aplicar_estilo_visual([arquivo_comp]) # Aplica estilo no arquivo anexado no email
 
@@ -350,14 +350,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
             base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
  
-            for gestor_email in base_do_dia['GERENTE_TESTE'].dropna().unique():
+            for gestor_email in base_do_dia['GERENTE'].dropna().unique():
  
                 if str(gestor_email).strip().lower() in ("nan", "none", ""):
                     gestores_sem_email += 1
                     continue
  
                 comps_gestor = base_do_dia[
-                    base_do_dia['GERENTE_TESTE'] == gestor_email
+                    base_do_dia['GERENTE'] == gestor_email
                 ]['Nº Cliente/COMP'].unique()
  
                 df_gestor = df_nao_localizados_email[
@@ -367,10 +367,10 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 if df_gestor.empty:
                     continue
  
-                registro_gestor = base_do_dia[base_do_dia['GERENTE_TESTE'] == gestor_email]
+                registro_gestor = base_do_dia[base_do_dia['GERENTE'] == gestor_email]
                 cc_gestor = []
                 for _, row in registro_gestor.iterrows():
-                    for campo in ['SUPERVISOR_TESTE', 'COORDENADOR_TESTE']:
+                    for campo in ['SUPERVISOR', 'COORDENADOR']:
                         val = row.get(campo)
                         if pd.notna(val) and str(val).strip().lower() not in ("nan", "none", ""):
                             cc_gestor.append(str(val).strip())
@@ -401,8 +401,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 )
  
                 corpo_email = montar_corpo_email_gestor(html_tabela)
-                gestor_id = str(gestor_email).split("@")[0]
-                arquivo_gestor = config.OUTPUT_INCORRETOS / f"Pendencias_Gestor_{gestor_id}.xlsx"
+                arquivo_gestor = config.OUTPUT_INCORRETOS / f"Pendencias_Squads.xlsx"
                 df_anexo_gestor = montar_layout_gestor(df_gestor)
                 df_anexo_gestor.to_excel(arquivo_gestor, index=False)
                 aplicar_estilo_visual([arquivo_gestor]) # Aplica estilo no arquivo anexado no email
@@ -412,7 +411,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         email_origem=os.getenv("Email_User"),
                         destinatarios=[str(gestor_email).strip()],
                         cc=cc_gestor if cc_gestor else None,
-                        assunto="Pendências de Lançamento EBTA – Regularização Necessária",
+                        assunto="Pendências de Lançamento EBTA - Regularização Necessária",
                         corpo=corpo_email,
                         anexos=[str(arquivo_gestor)],
                     )
@@ -425,26 +424,55 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             if gestores_sem_email > 0:
                 print(f"[AVISO] {gestores_sem_email} gestor(es) ignorados por ausência de e-mail na base.")
 
+        
+        # =========================
         # ENVIO DIRETORIA
+        # =========================
+
         if enviar_email_flag and existem_urgentes and not df_nao_localizados_email.empty:
 
-            qtde_casos = (df_nao_localizados['Dias Restantes'] <= 2).sum()
-            dias_min = df_nao_localizados['Dias Restantes'].min()
+            # Monta lista de gestores para CC
+            comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
+            base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
+
+            cc_diretoria = []
+            for val in base_do_dia['GERENTE'].dropna().unique():
+                if str(val).strip().lower() not in ("nan", "none", ""):
+                    cc_diretoria.append(str(val).strip())
+
+            # Monta anexo consolidado
+            df_nao_localizados_email_diretoria = df_nao_localizados_email[
+                df_nao_localizados_email['Dias Restantes'] <= 3
+            ]
+            df_anexo_diretoria = montar_layout_diretoria(df_nao_localizados_email_diretoria)
+            arquivo_diretoria = config.OUTPUT_INCORRETOS / "Pendencias_Squads.xlsx"
+            df_anexo_diretoria.to_excel(arquivo_diretoria, index=False)
+            aplicar_estilo_visual([arquivo_diretoria])
+
             corpo_diretoria = montar_corpo_diretoria()
 
             destinatarios_diretoria = diretoria.copy()
-            if gerente_rm:
-                destinatarios_diretoria.append(gerente_rm)
+            destinatarios_diretoria.extend(gerente_rm)
 
-            enviar_email(
-                email_origem=os.getenv("Email_User"),
-                destinatarios=destinatarios_diretoria,
-                assunto="Alerta de Clientes com Risco de Não Conciliação",
-                corpo=corpo_diretoria,
-                anexos=None
-            )
-        
-            # Finalização
+            try:
+                enviar_email(
+                    email_origem=os.getenv("Email_User"),
+                    destinatarios=destinatarios_diretoria,
+                    cc=cc_diretoria if cc_diretoria else None,
+                    assunto="Último Alerta - Regularização de Dados para Fechamento Conciliação",
+                    corpo=corpo_diretoria,
+                    anexos=[str(arquivo_diretoria)],
+                )
+            finally:
+                try:
+                    arquivo_diretoria.unlink()
+                except OSError:
+                    pass
+       
+        # =========================
+        # FINALIZAÇÃO
+        # =========================
+
         if atualizar_status:
             atualizar_status(
                 "Finalizando",
@@ -521,7 +549,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
     df_log['data_execucao'] = data_execucao
     df_log['celula'] = df_log['SQUADS']
     df_log['Nome da Empresa'] = df_planilha['Nome da Empresa']
-    df_log['status_email'] = "Sim" if status_execucao == "Sucesso" else "Não"
+    df_log['status_email'] = "Sim" if (status_execucao == "Sucesso" and enviar_email_flag) else "Não"
     df_log['usuario'] = usuario_execucao
     
     df_log = df_log [
