@@ -7,7 +7,7 @@ import win32com.client as win32
 #==============================================
 
 
-def enviar_email(email_origem,destinatarios, assunto, corpo, anexos=None, cc=None):
+def enviar_email(email_origem,destinatarios, assunto, corpo, anexos=None, cc=None, bcc=None):
     outlook = win32.Dispatch("Outlook.Application")
     mail = outlook.CreateItem(0)
     
@@ -15,7 +15,8 @@ def enviar_email(email_origem,destinatarios, assunto, corpo, anexos=None, cc=Non
 
     if cc:
         mail.cc = ";".join(cc)
-
+    if bcc:
+        mail.BCC = ";".join(bcc)
     mail.Subject = assunto
     mail.HTMLBody = corpo
 

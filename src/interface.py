@@ -41,6 +41,8 @@ BASE_PATH = get_base_path()
 EXEC_DIR  = get_exec_dir()
 INPUTS_DIR = EXEC_DIR / "inputs"
 
+DEMO_MODE = not os.getenv('DB_Server')
+
 arquivos_selecionados = {
     "pendencias": None,
     "emails":     None,
@@ -135,7 +137,7 @@ def buscar_arquivo_pendencias():
         return None
     arquivos = [
         f for f in INPUTS_DIR.rglob("*.xlsx")
-        if f.name.lower().startswith("pendencias")
+        if f.name.lower() == "pendencias_demo"
     ]
     return arquivos[0] if len(arquivos) == 1 else None
 
@@ -222,13 +224,16 @@ def _criar_header(painel, row=0):
     #ctk.CTkLabel(
     #    nome_frame, text="  Conciliação EBTA", font=("Segoe UI", 11), text_color="#ffffff"
     #).pack(side="left")
-
+    badge_texto = "demo" if DEMO_MODE else "v1.0"
+    badge_cor   = "#2D1B00" if DEMO_MODE else "#1E293B"
+    badge_txt_cor = "#F59E0B" if DEMO_MODE else "#ffffff"
+    
     ctk.CTkLabel(
         header,
-        text="v1.0",
+        text=badge_texto,
         font=("Segoe UI", 10),
-        text_color="#ffffff",
-        fg_color="#1E293B",
+        text_color=badge_txt_cor,
+        fg_color=badge_cor,
         corner_radius=20,
         padx=10,
         pady=3,
@@ -311,6 +316,17 @@ def mostrar_menu():
         arquivos_selecionados["pendencias"] = buscar_arquivo_pendencias()
     if arquivos_selecionados["emails"] is None:
         arquivos_selecionados["emails"] = buscar_arquivo_emails()
+
+         # Fallback demo: preenche automaticamente se ainda vazio
+    if DEMO_MODE:
+        if arquivos_selecionados["pendencias"] is None:
+            demo_pend = INPUTS_DIR / "pendencias_demo.xlsx"
+            if demo_pend.exists():
+                arquivos_selecionados["pendencias"] = demo_pend
+        if arquivos_selecionados["emails"] is None:
+            demo_email = INPUTS_DIR / "Base_emails.xlsx"
+            if demo_email.exists():
+                arquivos_selecionados["emails"] = demo_email
 
     painel = _criar_painel_central(width=860, height=560)
     row    = _criar_header(painel, row=0)
@@ -452,7 +468,7 @@ def mostrar_menu():
     toggle_frame.grid(row=row, column=0, sticky="w", padx=36, pady=(0, 4))
     row += 1
 
-    ctk.CTkSwitch(
+    switch = ctk.CTkSwitch(
         toggle_frame,
         text="Enviar e-mail ao final",
         variable=enviar_email_var,
@@ -463,7 +479,12 @@ def mostrar_menu():
         button_hover_color="#E5E7EB",
         text_color="#9CA3AF",
         font=("Segoe UI", 13),
-    ).pack(side="left")
+    )
+    switch.pack(side="left")
+
+    # em mostrar_menu(), após criar o CTkSwitch
+    if DEMO_MODE:
+        switch.configure(state="disabled")
 
     def ir_para_confirmacao():
         mostrar_confirmacao(enviar_email_var.get())

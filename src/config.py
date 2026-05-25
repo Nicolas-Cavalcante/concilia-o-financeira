@@ -46,3 +46,4 @@ LOG_CLIENTES_PATH = LOG_DIR / "clientes_nao_encontrados.xlsx"
 OUTPUT_CORRETOS.mkdir(parents=True, exist_ok=True)
 OUTPUT_INCORRETOS.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+

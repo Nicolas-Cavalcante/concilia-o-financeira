@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 
@@ -268,3 +269,6 @@ Interface (Python)	python -m src.interface	Requer Python 3.10+ e dependências i
 CLI	python -m src.main --input1 arquivo1 --input2 arquivo2	Sem interface gráfica — útil para automação e testes
 
 SmartCheck · Documentação Técnica v1.0 · Uso interno e confidencial
+=======
+# concilia-o-financeira
+>>>>>>> c2680a2bb105c51f066cd86aa5e474a881d008bb
