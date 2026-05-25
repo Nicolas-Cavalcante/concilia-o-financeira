@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from pandas.api.types import is_datetime64_any_dtype
 from src.extract.pendencias import df_depara
 
 
@@ -9,7 +9,11 @@ from src.extract.pendencias import df_depara
 # CRIANDO NOVAS COLUNAS E CHAVES PARA CONCILIAÇÃO.
 # =========================
 
+COLUNAS_DEMO = {"Empresa", "Data", "Valor", "Aut", "Loc Cia", "Cartao"}
+
+
 def tratar_dados(df, df_email):
+    df = _normalizar_layout_demo(df)
 
     #==============================================
     # TRATA COLUNAS PARA CRIAÇÃO DE CHAVES E AJUSTES NO ARQUIVO FINAL
@@ -42,24 +46,20 @@ def tratar_dados(df, df_email):
     df['RLOC_CIA_CORRETO'] = df['RLOC_CIA_CORRETO'].fillna('')
 
     # Ajusta taxa de embarque para float, igualando dados entre df_sql x df_planilha
-    df['Taxa de Embarque'] = df['Taxa de Embarque'].astype(float)
+    df['Taxa de Embarque'] = pd.to_numeric(df['Taxa de Embarque'], errors='coerce').fillna(0.0)
     
     # Força asterisco nas colunas Classe e data ida, pois não vem formatado do bradesco
     df['Classe'] = '**********'
     df['Data Ida'] = '**********'
 
+    df['Valor Total'] = pd.to_numeric(df['Valor Total'], errors='coerce')
+
     # Cria Valor Total str para não alterar a configuração da coluna de valor original
     df['Valor Total str'] = df['Valor Total'].apply(
-        lambda x: f"{x:.2f}" if pd.notnull(x) else x
+        lambda x: f"{x:.2f}" if pd.notnull(x) else ''
     )
 
-    df['Valor Total'] = df['Valor Total'].astype(float)
-
-    df['SQUADS'] = df.merge(
-        df_email[['Nº Cliente/COMP', 'SQUADS']],
-        on='Nº Cliente/COMP',
-        how='left'
-    )['SQUADS']
+    df = _aplicar_squads(df, df_email)
 
     #==============================================
     # CRIA COLUNA DE DATA DE FECHAMENTO, DIAS RESTANTES E SETA EMISSOR
@@ -68,6 +68,8 @@ def tratar_dados(df, df_email):
 
     data_execucao = pd.Timestamp.today().normalize()
     hoje = pd.Timestamp.today().normalize()
+
+    df['Aging Corte'] = pd.to_numeric(df['Aging Corte'], errors='coerce').fillna(0)
 
     # Data de fechamento original
     df['Data Fechamento Cartão'] = data_execucao + pd.to_timedelta(df['Aging Corte'] + 4, unit='D')
@@ -87,6 +89,8 @@ def tratar_dados(df, df_email):
 
     df['Data Fechamento Cartão'] = df['Data Fechamento Cartão'].dt.strftime('%d/%m/%Y')
 
+    if not is_datetime64_any_dtype(df['Data de Emissão']):
+        df['Data de Emissão'] = pd.to_datetime(df['Data de Emissão'], errors='coerce', dayfirst=True)
     df['Data de Emissão'] = df['Data de Emissão'].dt.strftime('%d/%m/%Y')
 
     df['Emissor'] = ''
@@ -137,4 +141,79 @@ def tratar_dados(df, df_email):
         df['Chave Aut + Data + Valor'].astype(str)
     )
    
+    return df
+
+
+def _normalizar_layout_demo(df):
+    if not (COLUNAS_DEMO.issubset(df.columns) and 'Nome da Empresa' not in df.columns):
+        return df.copy()
+
+    df = df.copy()
+    loc_cia = df['Loc Cia'].fillna('').astype(str).str.upper()
+
+    colunas_demo = {
+        'MatchID': range(1, len(df) + 1),
+        'Aging Venda': 0,
+        'Aging Corte': 10,
+        'Nº Cliente/COMP': df['Empresa'].astype(str).str.strip(),
+        'Cartão': df['Cartao'].astype(str).str.strip(),
+        'Agência': '',
+        'Nome da Empresa': df['Empresa'].astype(str).str.strip(),
+        'Autorização': df['Aut'].astype(str).str.strip(),
+        'Data de Emissão': pd.to_datetime(df['Data'], errors='coerce'),
+        'Valor Total': pd.to_numeric(df['Valor'], errors='coerce'),
+        'Valor Bilhete (Travel)': pd.to_numeric(df['Valor'], errors='coerce'),
+        'Cia Aérea': '001',
+        'Nome da Cia Aérea': 'CIA DEMO *' + loc_cia,
+        'Ticket': '',
+        'Débito/Fee': 0,
+        'Desconto/Rebate': 0,
+        'Centro de Custo': '',
+        'Data Ida': '',
+        'Data Volta': '',
+        'Passageiro': df.get('Passageiro', ''),
+        'Trecho Voado': '',
+        'Classe': '',
+        'Departamento': '',
+        'Matricula': '',
+        'Requisição': '',
+        'Solicitante': '',
+        'Aprovador': '',
+        'Localizador': '',
+        'Livre 1': '',
+        'Livre 2': '',
+        'Livre 3': '',
+        'Empresa Empregado': '',
+        'Taxa de Embarque': 0,
+        'Taxa de Repasse': 0,
+        'Tipo': 'DEMO',
+    }
+
+    for coluna, valor in colunas_demo.items():
+        if coluna not in df.columns:
+            df[coluna] = valor
+
+    return df
+
+
+def _normalizar_comp(serie):
+    return serie.where(serie.notna(), '').astype(str).str.strip()
+
+
+def _aplicar_squads(df, df_email):
+    df = df.copy()
+    df_email = df_email.copy()
+
+    df['Nº Cliente/COMP'] = _normalizar_comp(df['Nº Cliente/COMP'])
+    df_email['Nº Cliente/COMP'] = _normalizar_comp(df_email['Nº Cliente/COMP'])
+
+    df['SQUADS'] = df.merge(
+        df_email[['Nº Cliente/COMP', 'SQUADS']],
+        on='Nº Cliente/COMP',
+        how='left'
+    )['SQUADS']
+
+    if df['SQUADS'].isna().all() and 'Empresa' in df.columns:
+        df['SQUADS'] = df['Empresa'].astype(str).str.strip()
+
     return df

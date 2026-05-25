@@ -2,31 +2,56 @@ import pandas as pd
 from pathlib import Path
 from src.erros import SmartCheckError
 
+
 #==============================================
 # 📑 CARREGA BASE DE PENDêNCIAS
 #==============================================
 
 def carregar_planilha(path):
-    abas = pd.read_excel(path, header=3, sheet_name=None)
-
-    colunas_esperadas = {"Nome da Empresa", "Autorização"}
+    tentativas = [
+        (3, {"Nome da Empresa", "Autorização"}),
+        (0, {"Nome da Empresa", "Autorização"}),
+        (0, {"Empresa", "Aut"}),
+    ]
     abas_analisadas_pendencia = []
 
-    for nome_aba, df in abas.items():
-        abas_analisadas_pendencia.append(nome_aba)
+    for header, colunas_esperadas in tentativas:
+        abas = pd.read_excel(path, header=header, sheet_name=None)
 
-        if colunas_esperadas.issubset(df.columns):
-            return df
+        for nome_aba, df in abas.items():
+            abas_analisadas_pendencia.append(f"{nome_aba} (header={header})")
+
+            if colunas_esperadas.issubset(df.columns):
+                return df
         
     raise SmartCheckError(
         "Arquivo de pendências fora do padrão esperado: nenhuma aba contém as colunas obrigatórias "
-        f"{colunas_esperadas}. Abas encontradas {abas_analisadas_pendencia}"
+        "{'Nome da Empresa', 'Autorização'} ou {'Empresa', 'Aut'}. "
+        f"Abas analisadas: {abas_analisadas_pendencia}"
     )
 
 
 #==============================================
 # 📑 CARREGA DE_PARA DE CAMPOS GERÊNCIAIS
 #==============================================
+
+def _normalizar_depara(df):
+    renomear = {
+        "Campo Arquivo do Cliente": "Campo Arquivo do cliente",
+        "Campo arquivo do cliente": "Campo Arquivo do cliente",
+    }
+    df = df.rename(columns=renomear)
+
+    colunas_esperadas = {"Cliente", "Campo Arquivo do cliente", "Nome do Campo"}
+    if colunas_esperadas.issubset(df.columns):
+        return df
+
+    if {"Cliente", "Campo", "De", "Para"}.issubset(df.columns):
+        return pd.DataFrame(columns=list(colunas_esperadas))
+
+    faltando = colunas_esperadas - set(df.columns)
+    raise SmartCheckError(f"De-para inválido. Faltando: {faltando}")
+
 
 input_path = None
 
@@ -35,20 +60,8 @@ if not input_path:
     arquivos = list(pasta.glob("*De_Para_campos_gerenciais_EBTA*.xlsx"))
 
     if not arquivos:
-        raise SmartCheckError("Nenhum arquivo .xslx encontrado na pasta inputs")
+        raise SmartCheckError("Nenhum arquivo .xlsx encontrado na pasta inputs")
 
     input_path = max(arquivos, key=lambda f: f.stat().st_mtime)
 
-df_depara = pd.read_excel(input_path)
-
-
-
-
-## adicionar posteriormente para evitar quebra silenciosa
-
-#colunas_esperadas = {'Cliente', 'Campo Arquivo do Cliente', 'Nome do Campo'}
-
-#faltando = colunas_esperadas - set(df_depara.columns)
-
-#if faltando:
-#    raise ValueError(f"De-para inválido. Faltando: {faltando}")
+df_depara = _normalizar_depara(pd.read_excel(input_path))

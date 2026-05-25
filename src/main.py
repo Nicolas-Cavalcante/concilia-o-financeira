@@ -66,11 +66,16 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         df_planilha = carregar_planilha(input_path)
         time.sleep(2.5)
         # Valida se é o arquivo correto
-        colunas_esperadas_pendencias = ['Autorização', 'Valor Total', 'Nome da Empresa', 'Cartão']
-        colunas_faltando = [c for c in colunas_esperadas_pendencias if c not in df_planilha.columns]
-        if colunas_faltando:
+        layouts_validos_pendencias = [
+            {"Nome da Empresa", "Autorização"},
+            {"Empresa", "Aut"},
+        ]
+        if not any(layout.issubset(df_planilha.columns) for layout in layouts_validos_pendencias):
             raise SmartCheckError(
-                mensagem_usuario=f"Arquivo de pendências inválido. Verifique se selecionou o arquivo correto.\nColunas não encontradas: {', '.join(colunas_faltando)}",
+                mensagem_usuario=(
+                    "Arquivo de pendências inválido. Verifique se selecionou o arquivo correto.\n"
+                    "Layouts aceitos: {'Nome da Empresa', 'Autorização'} ou {'Empresa', 'Aut'}."
+                ),
                 tipo="usuario",
             )
 
@@ -128,7 +133,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         if controle["cancelar"]:
             return
 
-        atualizar_status("Bases carregadas. Iniciando processamento", 55)
+        if atualizar_status:
+            atualizar_status("Bases carregadas. Iniciando processamento", 55)
         time.sleep(2.5)
 
         if df_planilha.empty:
@@ -246,16 +252,16 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # ENVIO POR SQUAD (OPERAÇÃO)
         # =========================
 
-        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 2).any()
         nao_urgente = (df_nao_localizados_email['Dias Restantes'] >= 0).any()
-        gerente_rm = os.getenv("Email_RM").split(";")
-        diretoria = os.getenv("Email_Diretoria").split(";")
+        gerente_rm = [e.strip() for e in os.getenv("Email_RM", "").split(";") if e.strip()]
+        diretoria = [e.strip() for e in os.getenv("Email_Diretoria", "").split(";") if e.strip()]
  
         if enviar_email_flag and not df_nao_localizados_email.empty:
  
             squads_sem_email = 0
             comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
             base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
+            bcc_lista = [e.strip() for e in os.getenv("Email_BCC", "").split(";") if e.strip()]
  
             for squads_email in base_do_dia['E-MAIL SQUADS'].dropna().unique():
  
@@ -321,12 +327,13 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                 arquivo_comp = config.OUTPUT_INCORRETOS / f"Pendencias_Squad.xlsx"
                 df_anexo.to_excel(arquivo_comp, index=False)
                 aplicar_estilo_visual([arquivo_comp]) # Aplica estilo no arquivo anexado no email
-
+                
                 try:
                     enviar_email(
                         email_origem=os.getenv("Email_User"),
                         destinatarios=to_email,
                         cc=cc_emails if cc_emails else None,
+                        bcc=bcc_lista if bcc_lista else None,
                         assunto=f"Pendências de Lançamento EBTA - Regularização Necessária - {registro_base.get('SQUADS', '')}",
                         corpo=corpo_email,
                         anexos=[str(arquivo_comp)],
@@ -349,7 +356,8 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
             gestores_sem_email = 0
             comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
             base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
- 
+            bcc_lista = [e.strip() for e in os.getenv("Email_BCC", "").split(";") if e.strip()]
+
             for gestor_email in base_do_dia['GERENTE'].dropna().unique():
  
                 if str(gestor_email).strip().lower() in ("nan", "none", ""):
@@ -411,6 +419,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                         email_origem=os.getenv("Email_User"),
                         destinatarios=[str(gestor_email).strip()],
                         cc=cc_gestor if cc_gestor else None,
+                        bcc=bcc_lista if bcc_lista else None,
                         assunto="Pendências de Lançamento EBTA - Regularização Necessária",
                         corpo=corpo_email,
                         anexos=[str(arquivo_gestor)],
@@ -429,11 +438,14 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
         # ENVIO DIRETORIA
         # =========================
 
+        existem_urgentes = (df_nao_localizados_email['Dias Restantes'] <= 3).any() 
+
         if enviar_email_flag and existem_urgentes and not df_nao_localizados_email.empty:
 
             # Monta lista de gestores para CC
             comps_do_dia = df_nao_localizados_email['Nº Cliente/COMP'].unique()
             base_do_dia = df_base_email[df_base_email['Nº Cliente/COMP'].isin(comps_do_dia)]
+            bcc_lista = [e.strip() for e in os.getenv("Email_BCC", "").split(";") if e.strip()]
 
             cc_diretoria = []
             for val in base_do_dia['GERENTE'].dropna().unique():
@@ -459,6 +471,7 @@ def main(input_path, input_path2, enviar_email_flag, atualizar_status, controle)
                     email_origem=os.getenv("Email_User"),
                     destinatarios=destinatarios_diretoria,
                     cc=cc_diretoria if cc_diretoria else None,
+                    bcc=bcc_lista if bcc_lista else None,
                     assunto="Último Alerta - Regularização de Dados para Fechamento Conciliação",
                     corpo=corpo_diretoria,
                     anexos=[str(arquivo_diretoria)],

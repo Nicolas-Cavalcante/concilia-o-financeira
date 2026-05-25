@@ -1,27 +1,39 @@
-import pyodbc
-import pandas as pd
-from datetime import datetime, timedelta
 import calendar
 import os
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
+
+from src.config import EXEC_DIR
+
+
+COLUNAS_CHAVE = [
+    "Chave Aut + Data + Valor",
+    "Chave nr_aut + Data + Valor",
+    "Chave Loc Cia + Data + Valor",
+    "Chave Cartão + Data + Valor + Loc Cia",
+    "Chave Cartão + Valor + Loc Cia",
+    "dt_movimento",
+]
+
 
 def carregar_sql():
+    data_inicial, data_final = _calcular_periodo_consulta()
 
-    # Usa Load_dotenv para ler o arquivo .env
-    server = os.getenv('DB_Server')
-    database = os.getenv('DB_Database')
-    username = os.getenv('DB_User')
-    password = os.getenv('DB_Password')
+    if _usar_sqlite_demo():
+        df_sql = _carregar_sqlite(data_inicial, data_final)
+    else:
+        df_sql = _carregar_sql_server(data_inicial, data_final)
 
-    conn = pyodbc.connect(
-        f'DRIVER={{SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};'
-    )
-    # Hoje com horário zerado
+    return _normalizar_retorno_sql(df_sql)
+
+
+def _calcular_periodo_consulta():
     hoje = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-
-    # Primeiro dia do mês atual
     meses_atras = 3
 
-    #Calcular o primeiro dia do mês de partida
     ano = hoje.year
     mes = hoje.month
 
@@ -32,12 +44,121 @@ def carregar_sql():
             ano -= 1
 
     data_inicial = datetime(ano, mes, 1)
-
-    # Último dia do mês atual (para a data final)
     ultimo_dia = calendar.monthrange(hoje.year, hoje.month)[1]
     data_final = hoje.replace(day=ultimo_dia, hour=23, minute=59, second=59)
 
-   # ===== QUERY SQL =====
+    return data_inicial, data_final
+
+
+def _env(nome):
+    valor = os.getenv(nome)
+    return valor.strip() if valor else ""
+
+
+def _flag_ativa(valor):
+    return str(valor).strip().lower() in {"1", "true", "yes", "sim", "s"}
+
+
+def _usar_sqlite_demo():
+    engine = (
+        _env("DB_Engine")
+        or _env("DB_ENGINE")
+        or _env("DB_Mode")
+        or _env("DB_MODE")
+    ).lower()
+
+    if engine:
+        return engine in {"sqlite", "sqlite3", "demo", "local"}
+
+    if _flag_ativa(os.getenv("DEMO_MODE")) or _flag_ativa(os.getenv("USE_DEMO_DB")):
+        return True
+
+    return not _env("DB_Server")
+
+
+def _resolver_demo_db_path():
+    db_path = Path(_env("DB_SQLITE_PATH") or "demo.db")
+    if not db_path.is_absolute():
+        db_path = EXEC_DIR / db_path
+    return db_path
+
+
+def _carregar_sqlite(data_inicial, data_final):
+    db_path = _resolver_demo_db_path()
+
+    if not db_path.exists():
+        raise FileNotFoundError(
+            f"Banco SQLite demo não encontrado em: {db_path}. "
+            "Gere o arquivo com generate_mock_data.py ou ajuste DB_SQLITE_PATH no .env."
+        )
+
+    query = """
+        SELECT
+            empresa AS nm_cliente,
+            nr_aut AS nr_autorizacao_cartao,
+            aut AS AUTORIZACAOCARTAOAMEX,
+            'Cartão demo' AS tipo_pagamento,
+            loc_cia AS Localizador,
+            'DEMO-' || id AS OS,
+            CAST(bilhete AS TEXT) AS Bilhete,
+            CAST(cartao AS TEXT) AS nr_cartao_mascarado,
+            strftime('%d/%m/%Y', data) AS dt_movimento,
+            printf('%.2f', valor) AS vl_online_cliente,
+            CAST(aut AS TEXT) || strftime('%d/%m/%Y', data) || printf('%.2f', valor)
+                AS [Chave Aut + Data + Valor],
+            CAST(nr_aut AS TEXT) || strftime('%d/%m/%Y', data) || printf('%.2f', valor)
+                AS [Chave nr_aut + Data + Valor],
+            CAST(loc_cia AS TEXT) || strftime('%d/%m/%Y', data) || printf('%.2f', valor)
+                AS [Chave Loc Cia + Data + Valor],
+            CAST(cartao AS TEXT) || strftime('%d/%m/%Y', data) || printf('%.2f', valor) || CAST(loc_cia AS TEXT)
+                AS [Chave Cartão + Data + Valor + Loc Cia],
+            CAST(cartao AS TEXT) || printf('%.2f', valor) || CAST(loc_cia AS TEXT)
+                AS [Chave Cartão + Valor + Loc Cia],
+            'Centro demo' AS [Centro de Custo],
+            'CC-DEMO' AS cod_centro_custo,
+            passageiro AS [Nome do Passageiro],
+            '000000' AS Matricula,
+            'Solicitante demo' AS [Nome do Solicitante],
+            'Aprovador demo' AS Aprovador,
+            trecho AS Trecho,
+            'Departamento demo' AS Departamento,
+            '' AS INFPOLITICA,
+            '' AS CONVIDADO,
+            'Emissor demo' AS Emissor,
+            'Y' AS sgl_classe,
+            strftime('%d/%m/%Y', data) AS [Data Ida],
+            0.0 AS vl_taxa_embarque
+        FROM transacoes
+        WHERE date(data) BETWEEN date(?) AND date(?)
+    """
+
+    with sqlite3.connect(db_path) as conn:
+        if not conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'transacoes'"
+        ).fetchone():
+            raise ValueError("O demo.db não possui a tabela esperada: transacoes.")
+
+        return pd.read_sql(
+            query,
+            conn,
+            params=(data_inicial.date().isoformat(), data_final.date().isoformat()),
+        )
+
+
+def _carregar_sql_server(data_inicial, data_final):
+    import pyodbc
+
+    server = _env("DB_Server")
+    database = _env("DB_Database")
+    username = _env("DB_User")
+    password = _env("DB_Password")
+
+    conn = pyodbc.connect(
+        f"DRIVER={{SQL Server}};"
+        f"SERVER={server};DATABASE={database};"
+        f"UID={username};PWD={password}"
+    )
+
     query = f"""
     SELECT
             SO.nm_cliente,
@@ -120,24 +241,22 @@ def carregar_sql():
             ) SO
     """
 
-    df_sql = pd.read_sql(query, conn)
-   
-    colunas_chave = [
-    'Chave Aut + Data + Valor',
-    'Chave nr_aut + Data + Valor',
-    'Chave Loc Cia + Data + Valor',
-    'Chave Cartão + Data + Valor + Loc Cia',
-    'Chave Cartão + Valor + Loc Cia',
-    'dt_movimento',
-    ]
-    
-    df_sql[colunas_chave] = df_sql[colunas_chave].astype(str)
-    
-    mask_bilhete_numerico = df_sql['Bilhete'].str.fullmatch(r'\d{1,9}', na=False)
-    df_sql.loc[mask_bilhete_numerico, 'Bilhete'] = (
-        df_sql.loc[mask_bilhete_numerico, 'Bilhete'].str.zfill(10)
-    )
+    try:
+        return pd.read_sql(query, conn)
+    finally:
+        conn.close()
 
-    conn.close()
+
+def _normalizar_retorno_sql(df_sql):
+    for coluna in COLUNAS_CHAVE:
+        if coluna in df_sql.columns:
+            df_sql[coluna] = df_sql[coluna].fillna("").astype(str)
+
+    if "Bilhete" in df_sql.columns:
+        df_sql["Bilhete"] = df_sql["Bilhete"].fillna("").astype(str)
+        mask_bilhete_numerico = df_sql["Bilhete"].str.fullmatch(r"\d{1,9}", na=False)
+        df_sql.loc[mask_bilhete_numerico, "Bilhete"] = (
+            df_sql.loc[mask_bilhete_numerico, "Bilhete"].str.zfill(10)
+        )
 
     return df_sql
